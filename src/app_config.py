@@ -13,16 +13,30 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 # Zugangsschutz
 # ---------------------------------------------------------------------------
-APP_ACCESS_PASSWORD = os.getenv(
-    "APP_ACCESS_PASSWORD",
-    "",
-).strip()
+def get_secret(name: str, default: str = "") -> str:
+    """Liest einen Wert aus .env/Umgebungsvariablen oder Streamlit Secrets."""
 
-ADMIN_PASSWORD = os.getenv(
-    "ADMIN_PASSWORD",
-    "",
-).strip()
+    environment_value = os.getenv(name, "").strip()
 
+    if environment_value:
+        return environment_value
+
+    try:
+        return str(
+            st.secrets.get(name, default)
+        ).strip()
+    except Exception:
+        return default
+
+
+APP_ACCESS_PASSWORD = get_secret(
+    "APP_ACCESS_PASSWORD"
+)
+
+
+ADMIN_PASSWORD = get_secret(
+    "ADMIN_PASSWORD"
+)
 # ---------------------------------------------------------------------------
 # OpenAI und RAG
 # ---------------------------------------------------------------------------
