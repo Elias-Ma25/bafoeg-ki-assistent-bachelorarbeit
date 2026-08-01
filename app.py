@@ -920,10 +920,16 @@ def process_uploaded_files(uploaded_files) -> bool:
 # ---------------------------------------------------------------------------
 def get_context(question: str) -> str:
     try:
-        return get_relevant_context(question, VECTORSTORE_DIR, k=3)
-    except Exception:
-        return ""
-
+        return get_relevant_context(
+            question,
+            VECTORSTORE_DIR,
+            k=5,
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            "Die BAföG-Wissensbasis konnte nicht "
+            "abgefragt werden."
+        ) from exc
 
 def answer_general_question(question: str) -> str:
     if client is None:

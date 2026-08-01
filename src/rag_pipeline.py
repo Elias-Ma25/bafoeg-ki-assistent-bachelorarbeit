@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 
 import os
 
@@ -38,7 +39,68 @@ def load_vectorstore(persist_directory: str = "chroma_db"):
     embeddings = OpenAIEmbeddings()
     return Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 
-def get_relevant_context(question: str, persist_directory: str = "chroma_db", k: int = 3) -> str:
-    vectorstore = load_vectorstore(persist_directory)
-    docs = vectorstore.similarity_search(question, k=k)
-    return "\n\n".join(doc.page_content for doc in docs)
+def get_relevant_context(
+    question: str,
+    persist_directory: str = "chroma_db",
+    k: int = 5,
+) -> str:
+    vectorstore = load_vectorstore(
+        persist_directory
+    )
+
+    # MMR sucht relevante, aber zugleich unterschiedliche Abschnitte.
+    # Dadurch stammen nicht alle Treffer aus derselben FAQ oder Datei.
+    if hasattr(
+        vectorstore,
+        "max_marginal_relevance_search",
+    ):
+        docs = vectorstore.max_marginal_relevance_search(
+            question,
+            k=k,
+            fetch_k=15,
+            lambda_mult=0.7,
+        )
+    else:
+        docs = vectorstore.similarity_search(
+            question,
+            k=k,
+        )
+
+    context_parts: list[str] = []
+
+    for doc in docs:
+        content = str(
+            doc.page_content
+        ).strip()
+
+        if not content:
+            continue
+
+        source_path = str(
+            doc.metadata.get(
+                "source",
+                "Unbekannte Quelle",
+            )
+        )
+
+        source_name = Path(
+            source_path
+        ).name
+
+        page = doc.metadata.get("page")
+
+        if isinstance(page, int):
+            source_label = (
+                f"{source_name}, Seite {page + 1}"
+            )
+        else:
+            source_label = source_name
+
+        context_parts.append(
+            f"[Quelle: {source_label}]\n"
+            f"{content}"
+        )
+
+    return "\n\n---\n\n".join(
+        context_parts
+    )
