@@ -7,7 +7,6 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-
 def load_knowledge_documents(folder_path: str):
     documents = []
     if not os.path.isdir(folder_path):
@@ -20,7 +19,6 @@ def load_knowledge_documents(folder_path: str):
         elif filename.lower().endswith(".pdf"):
             documents.extend(PyPDFLoader(file_path).load())
     return documents
-
 
 def build_vectorstore(folder_path: str, persist_directory: str = "chroma_db"):
     documents = load_knowledge_documents(folder_path)
@@ -36,11 +34,9 @@ def build_vectorstore(folder_path: str, persist_directory: str = "chroma_db"):
         persist_directory=persist_directory,
     )
 
-
 def load_vectorstore(persist_directory: str = "chroma_db"):
     embeddings = OpenAIEmbeddings()
     return Chroma(persist_directory=persist_directory, embedding_function=embeddings)
-
 
 def get_relevant_context(question: str, persist_directory: str = "chroma_db", k: int = 3) -> str:
     vectorstore = load_vectorstore(persist_directory)
