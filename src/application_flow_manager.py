@@ -12,8 +12,8 @@ class ApplicationFlowManager:
     noch bereits vom Nutzer bestätigt wurde.
     """
 
-    ASSET_LIMIT_UNDER_30 = 15_000
-    ASSET_LIMIT_FROM_30 = 45_000
+    ASSET_LIMIT_UNDER_30 = 10_000
+    ASSET_LIMIT_FROM_30 = 30_000
 
     def __init__(self) -> None:
         self.steps: list[dict[str, Any]] = [
