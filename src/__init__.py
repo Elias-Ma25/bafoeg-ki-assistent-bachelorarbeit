@@ -1,0 +1,1 @@
+"""Kernmodule des KI-gestützten BAföG-Assistenten."""

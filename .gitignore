@@ -1,0 +1,33 @@
+# Geheimnisse und lokale Konfiguration
+.env
+.env.*
+!.env.example
+
+# Virtuelle Python-Umgebungen
+.venv/
+venv/
+env/
+
+# Python-Zwischendateien
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Entwicklungsumgebungen
+.idea/
+.vscode/
+
+# Lokal erzeugte Vektordatenbank
+chroma_db/
+
+# Protokolle und temporäre Dateien
+*.log
+*.tmp
+
+# Betriebssystemdateien
+Thumbs.db
+.DS_Store
+
+# Lokal erzeugte Ergebnisse
+Formblatt_1_vorausgefuellt.pdf

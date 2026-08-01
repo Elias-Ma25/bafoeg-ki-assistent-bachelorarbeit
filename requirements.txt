@@ -1,0 +1,17 @@
+streamlit
+openai
+langchain
+langchain-openai
+langchain-community
+chromadb
+pypdf
+pdfplumber
+python-dotenv
+pandas
+pydantic
+tiktoken
+pdfrw
+fillpdf
+reportlab
+requests
+beautifulsoup4
