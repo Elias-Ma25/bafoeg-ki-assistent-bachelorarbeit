@@ -2103,6 +2103,7 @@ def render_categorized_form_preview(draft: dict) -> None:
                 )
 
                 st.session_state["manual_form_values"] = merged_values
+
                 if "bescheid_empfaenger" in edited_values:
                     selected_recipient = str(
                         edited_values["bescheid_empfaenger"]
@@ -2114,8 +2115,20 @@ def render_categorized_form_preview(draft: dict) -> None:
                         "confidence": "high",
                     }
 
-                st.session_state["editing_section"] = ""
+                # Änderung beim Vermögen zusätzlich im case_state speichern,
+                # weil die Checkliste ihre Regeln aus case_state liest.
+                if "vermoegen_unter_grenze" in edited_values:
+                    selected_asset_value = str(
+                        edited_values["vermoegen_unter_grenze"]
+                    ).strip().lower()
 
+                    st.session_state["case_state"]["vermoegen_unter_grenze"] = {
+                        "value": selected_asset_value,
+                        "source": "user_confirmed",
+                        "confidence": "high",
+                    }
+
+                st.session_state["editing_section"] = ""
                 st.session_state["form_saved"] = False
 
                 st.toast(
