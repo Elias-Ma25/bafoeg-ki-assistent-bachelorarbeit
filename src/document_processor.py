@@ -70,6 +70,8 @@ CASE_FIELDS = {
     "eigenes_einkommen",
     "wohnsituation",
     "wohnraum_eigentum_eltern",
+    "familienstand",
+    "kinder",
 }
 CASE_FIELD_ALLOWED_VALUES = {
     "vollzeitausbildung": {
@@ -100,7 +102,145 @@ CASE_FIELD_ALLOWED_VALUES = {
         "nein",
         "nicht_relevant",
     },
+    "familienstand": {
+        "ledig",
+        "verheiratet",
+        "dauernd_getrennt",
+        "verwitwet",
+        "geschieden",
+    },
+    "kinder": {
+        "ja",
+        "nein",
+    },
 }
+
+def normalize_family_status_value(
+    value: str,
+) -> str:
+    """Vereinheitlicht Familienstandsangaben aus Dokumenten."""
+
+    normalized = str(value or "").strip().lower()
+
+    normalized = normalized.replace("-", " ")
+    normalized = re.sub(r"\s+", " ", normalized)
+
+    aliases = {
+        "ledig": "ledig",
+        "unverheiratet": "ledig",
+        "nicht verheiratet": "ledig",
+
+        "verheiratet": "verheiratet",
+        "eingetragene lebenspartnerschaft": "verheiratet",
+        "verheiratet / eingetragene lebenspartnerschaft": (
+            "verheiratet"
+        ),
+
+        "dauernd getrennt": "dauernd_getrennt",
+        "dauernd getrennt lebend": "dauernd_getrennt",
+        "getrennt lebend": "dauernd_getrennt",
+
+        "verwitwet": "verwitwet",
+
+        "geschieden": "geschieden",
+        "lebenspartnerschaft aufgehoben": "geschieden",
+        "aufgehoben": "geschieden",
+    }
+
+    return aliases.get(
+        normalized,
+        normalized,
+    )
+
+
+def normalize_children_value(
+    value: str,
+) -> str:
+    """Vereinheitlicht Angaben zu eigenen Kindern."""
+
+    normalized = str(value or "").strip().lower()
+
+    normalized = normalized.replace("-", " ")
+    normalized = re.sub(r"\s+", " ", normalized)
+
+    negative_values = {
+        "nein",
+        "keine",
+        "kein kind",
+        "keine kinder",
+        "keine eigenen kinder",
+        "kinderlos",
+        "nicht vorhanden",
+    }
+
+    positive_values = {
+        "ja",
+        "eigene kinder",
+        "kinder vorhanden",
+        "ein kind",
+        "1 kind",
+    }
+
+    if normalized in negative_values:
+        return "nein"
+
+    if normalized in positive_values:
+        return "ja"
+
+    if re.search(
+        r"\b\d+\s+kinder?\b",
+        normalized,
+    ):
+        return "ja"
+
+    return normalized
+
+def deterministic_personal_case_fallback(
+    text: str,
+) -> dict[str, dict[str, str]]:
+    """Erkennt eindeutige Angaben zu Familienstand und Kindern."""
+
+    text = str(text or "")
+    updates: dict[str, dict[str, str]] = {}
+
+    family_match = re.search(
+        r"Familienstand\s*[:\-]?\s*"
+        r"(Ledig|Verheiratet|Dauernd getrennt(?: lebend)?|"
+        r"Verwitwet|Geschieden)",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    if family_match:
+        family_status = normalize_family_status_value(
+            family_match.group(1)
+        )
+
+        if family_status in CASE_FIELD_ALLOWED_VALUES["familienstand"]:
+            updates["familienstand"] = {
+                "value": family_status,
+                "confidence": "high",
+            }
+
+    children_match = re.search(
+        r"Eigene\s+Kinder\s*[:\-]?\s*([^\n\r]+)",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    if children_match:
+        children = normalize_children_value(
+            children_match.group(1)
+        )
+
+        if children in CASE_FIELD_ALLOWED_VALUES["kinder"]:
+            updates["kinder"] = {
+                "value": children,
+                "confidence": "high",
+            }
+
+    return updates
+
 def normalize_insurance_value(value: str) -> str:
     """
     Vereinheitlicht unterschiedliche Formulierungen
@@ -177,6 +317,16 @@ def normalize_case_updates(
 
         if field_name == "krankenversicherung":
             value = normalize_insurance_value(value)
+
+        elif field_name == "familienstand":
+            value = normalize_family_status_value(value)
+
+        elif field_name == "kinder":
+            value = normalize_children_value(value)
+
+        else:
+            value = value.strip().lower()
+
 
         if confidence not in {
             "high",
