@@ -1,0 +1,185 @@
+DOKUMENTTYP: Produkt- und Anwendungsinformation
+
+TITEL: Informationen zum KI-gestützten BAföG-Assistenten
+
+WICHTIG:
+Dieses Dokument beschreibt ausschließlich die Funktionen und Grenzen
+des entwickelten Prototyps. Es ist keine Rechtsquelle und enthält keine
+rechtsverbindliche BAföG-Auskunft.
+
+1. Zweck der Anwendung
+
+Der KI-gestützte BAföG-Assistent unterstützt Studierende bei der
+Vorbereitung eines BAföG-Erstantrags.
+
+Die Anwendung soll den Antragsprozess verständlicher und
+strukturierter gestalten. Sie ersetzt weder das zuständige Amt für
+Ausbildungsförderung noch die offizielle Plattform BAföG Digital.
+
+Die Anwendung trifft keine rechtsverbindliche Entscheidung darüber,
+ob eine Person BAföG erhält oder wie hoch die Förderung ausfällt.
+
+2. Unterstützter Anwendungsbereich
+
+Der aktuelle Prototyp ist auf folgenden Standardfall begrenzt:
+
+- BAföG-Erstantrag
+- Studium in Deutschland
+- deutsche antragstellende Person
+- Vorbereitung von Formblatt 1
+- elternabhängige Förderung als Standardfall
+
+Nicht vollständig unterstützt werden insbesondere:
+
+- vollständige Auslandsförderung
+- sämtliche Fälle der elternunabhängigen Förderung
+- Folgeanträge
+- vollständige Förderungsberechnung
+- sämtliche rechtlichen Sonder- und Härtefälle
+- rechtsverbindliche Entscheidungen
+
+3. Freie BAföG-Beratung
+
+Im Modus „Freie BAföG-Beratung“ können Nutzer allgemeine Fragen zur
+BAföG-Erstantragstellung stellen.
+
+Die Antworten werden mit einer Wissensbasis aus amtlichen
+BAföG-Dokumenten unterstützt.
+
+Wenn die Wissensbasis keine eindeutige Information enthält, soll der
+Assistent darauf hinweisen und keine rechtlichen Voraussetzungen,
+Beträge oder Fristen erfinden.
+
+4. BAföG-Erstantrag vorbereiten
+
+Der dokumentenbasierte Antragsprozess kann über die Schaltfläche
+„BAföG-Erstantrag vorbereiten“ gestartet werden.
+
+Zu Beginn ist eine Studienbescheinigung nach § 9 BAföG oder
+Formblatt 2 erforderlich.
+
+Weitere Dokumente können optional hochgeladen werden, damit Angaben
+automatisch erkannt werden.
+
+5. Unterstützte Dokumente
+
+Der Prototyp kann unter anderem folgende Dokumentarten verarbeiten:
+
+- Studienbescheinigung nach § 9 BAföG
+- Formblatt 2
+- Personalausweis oder Reisepass
+- Lebenslauf
+- Wohnungsnachweis
+- Kranken- und Pflegeversicherungsnachweis
+- Einkommensnachweis
+- Vermögensnachweis
+- Leistungsnachweis
+
+Die Qualität der Erkennung hängt von Lesbarkeit, Aufbau und Inhalt des
+Dokuments ab.
+
+6. Automatische Dokumentenanalyse
+
+Aus hochgeladenen Dokumenten können beispielsweise folgende Angaben
+erkannt werden:
+
+- Vorname und Nachname
+- Geburtsdatum und Geburtsort
+- Anschrift
+- Hochschule
+- Studiengang
+- Abschlussziel
+- Matrikelnummer
+- Fachsemester
+- Hochschulsemester
+- Krankenversicherungsstatus
+- Angaben zum schulischen und beruflichen Werdegang
+
+Erkannte Angaben werden nicht automatisch als fehlerfrei angesehen.
+Sie müssen durch die Nutzer kontrolliert werden.
+
+7. Adaptive Fragen
+
+Nach der Dokumentenanalyse ermittelt die Anwendung, welche Angaben
+noch fehlen.
+
+Der Assistent stellt anschließend nur Fragen zu noch offenen
+Informationen.
+
+Die Fragen können beantwortet werden durch:
+
+- Schnellauswahl
+- freie Texteingabe
+
+Freie Antworten werden durch ein Sprachmodell interpretiert und in
+strukturierte Angaben umgewandelt.
+
+8. Persönliche Nachweis-Checkliste
+
+Die Anwendung erstellt anhand der gespeicherten Angaben eine
+persönliche Checkliste.
+
+Die Checkliste unterscheidet:
+
+- bereits vorhandene Nachweise
+- noch erforderliche Nachweise
+- optionale oder zu prüfende Nachweise
+
+Die Checkliste passt sich an, wenn Nutzer ihre Angaben ändern.
+
+Die endgültige Entscheidung über benötigte Unterlagen trifft das
+zuständige Amt für Ausbildungsförderung.
+
+9. Formularvorschau
+
+Die Anwendung erstellt eine Vorschau der unterstützten Felder von
+Formblatt 1.
+
+Die Angaben werden nach Kategorien dargestellt.
+
+Nutzer können:
+
+- erkannte Werte prüfen
+- fehlende Werte ergänzen
+- Angaben korrigieren
+- Kategorien speichern
+- alle Angaben abschließend bestätigen
+
+10. Vorausgefülltes Formblatt 1
+
+Nach der abschließenden Bestätigung kann die Anwendung Formblatt 1
+prototypisch vorausfüllen.
+
+Nicht unterstützte Felder können leer bleiben.
+
+Das erzeugte Dokument muss vor einer möglichen Einreichung vollständig
+kontrolliert und gegebenenfalls ergänzt werden.
+
+11. Datenschutz und Testbetrieb
+
+Der Prototyp ist für eingeladene Testpersonen im Rahmen einer
+Bachelorarbeit vorgesehen.
+
+Für Tests sollen möglichst synthetische oder anonymisierte Dokumente
+verwendet werden.
+
+Die Anwendung ist kein produktives Fachverfahren einer Behörde.
+
+12. Grenzen der Anwendung
+
+Der Assistent kann Fehler machen.
+
+Mögliche Fehlerquellen sind:
+
+- unleserliche oder unvollständige Dokumente
+- falsche Dokumentenklassifizierung
+- fehlerhafte Extraktion einzelner Angaben
+- missverstandene Freitextantworten
+- unvollständige Wissensbasis
+- veraltete oder widersprüchliche Informationsquellen
+
+Nutzer müssen sämtliche Angaben und die erzeugte PDF selbst
+kontrollieren.
+
+Bei rechtlich bedeutsamen oder unklaren Fällen ist das zuständige Amt
+für Ausbildungsförderung zu kontaktieren.
