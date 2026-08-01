@@ -2127,6 +2127,62 @@ def render_categorized_form_preview(draft: dict) -> None:
                         "source": "user_confirmed",
                         "confidence": "high",
                     }
+                # Wohnsituation mit der dynamischen Checkliste synchronisieren.
+                if "wohnsituation" in edited_values:
+                    selected_living_value = str(
+                        edited_values["wohnsituation"]
+                    ).strip().lower()
+
+                    living_value_map = {
+                        "ja": "bei_eltern",
+                        "nein": "nicht_bei_eltern",
+                        "": "",
+                    }
+
+                    normalized_living_value = living_value_map.get(
+                        selected_living_value,
+                        selected_living_value,
+                    )
+
+                    st.session_state["case_state"]["wohnsituation"] = {
+                        "value": normalized_living_value,
+                        "source": "user_confirmed",
+                        "confidence": "high",
+                    }
+
+                    # Beim Wohnen mit den Eltern ist die Eigentumsfrage
+                    # für diesen Schritt nicht mehr relevant.
+                    if normalized_living_value == "bei_eltern":
+                        st.session_state["case_state"][
+                            "wohnraum_eigentum_eltern"
+                        ] = {
+                            "value": "nicht_relevant",
+                            "source": "user_confirmed",
+                            "confidence": "high",
+                        }
+
+                        merged_values["wohnraum_eigentum_eltern"] = ""
+                        st.session_state["manual_form_values"] = merged_values
+
+                # Eigentumsangabe synchronisieren, wenn nicht bei den Eltern gewohnt wird.
+                if (
+                        "wohnraum_eigentum_eltern" in edited_values
+                        and st.session_state["case_state"]
+                        .get("wohnsituation", {})
+                        .get("value") == "nicht_bei_eltern"
+                ):
+                    selected_ownership_value = str(
+                        edited_values["wohnraum_eigentum_eltern"]
+                    ).strip().lower()
+
+                    if selected_ownership_value in {"ja", "nein"}:
+                        st.session_state["case_state"][
+                            "wohnraum_eigentum_eltern"
+                        ] = {
+                            "value": selected_ownership_value,
+                            "source": "user_confirmed",
+                            "confidence": "high",
+                        }
 
                 st.session_state["editing_section"] = ""
                 st.session_state["form_saved"] = False
