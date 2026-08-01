@@ -1,20 +1,33 @@
 import hashlib
 import hmac
 import html
-import os
 import re
 from datetime import date
-from pathlib import Path
 from typing import Any
 
 import markdown
 import streamlit as st
 import streamlit.components.v1 as components
-from dotenv import load_dotenv
 from openai import OpenAI
 
+from src.app_config import (
+    ADMIN_PASSWORD,
+    APP_ACCESS_PASSWORD,
+    DOCUMENT_LABELS,
+    DOCUMENT_TYPES,
+    FORM_TEMPLATE,
+    KNOWLEDGE_FOLDER,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
+    PROFILE_KEYS,
+    VECTORSTORE_DIR,
+)
 from src.application_flow_manager import ApplicationFlowManager
 from src.checklist_manager import ChecklistManager
+from src.checklist_view import (
+    categorize_checklist,
+    render_checklist_items,
+)
 from src.document_processor import DocumentProcessor
 from src.formblatt1_manager import Formblatt1Manager
 from src.hybrid_questions import build_choice_result, get_hybrid_options
@@ -32,16 +45,9 @@ st.set_page_config(
     layout="wide",
 )
 
-load_dotenv()
-
 # ---------------------------------------------------------------------------
 # Zugangsschutz für die gesamte Anwendung
 # ---------------------------------------------------------------------------
-APP_ACCESS_PASSWORD = os.getenv(
-    "APP_ACCESS_PASSWORD",
-    "",
-).strip()
-
 
 def require_app_access() -> None:
     """Zeigt die Anwendung erst nach erfolgreicher Kennworteingabe."""
@@ -143,12 +149,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-KNOWLEDGE_FOLDER = os.getenv("KNOWLEDGE_FOLDER", "data/knowledge")
-VECTORSTORE_DIR = os.getenv("VECTORSTORE_DIR", "chroma_db")
-FORM_TEMPLATE = Path(os.getenv("FORMBLATT_1_TEMPLATE", "formblatt_1.pdf"))
-
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 flow_manager = ApplicationFlowManager()
 checklist_manager = ChecklistManager()
@@ -156,74 +156,6 @@ form_manager = Formblatt1Manager()
 document_processor = DocumentProcessor(client=client, model=OPENAI_MODEL)
 pdf_filler = PdfFormFiller()
 
-
-PROFILE_KEYS = {
-    "vorname",
-    "nachname",
-    "geburtsname",
-    "geburtsdatum",
-    "geburtsort",
-    "geschlecht",
-    "staatsangehoerigkeit",
-    "matrikelnummer",
-    "hochschule",
-    "ausbildungsort",
-    "studiengang",
-    "abschlussziel",
-    "hochschulsemester",
-    "fachsemester",
-    "regelstudienzeit",
-    "anschrift_strasse",
-    "anschrift_hausnummer",
-    "anschrift_adresszusatz",
-    "anschrift_land",
-    "anschrift_plz",
-    "anschrift_ort",
-    "ausbildung_strasse",
-    "ausbildung_hausnummer",
-    "ausbildung_adresszusatz",
-    "ausbildung_land",
-    "ausbildung_plz",
-    "ausbildung_ort",
-    "telefon",
-    "email",
-    "iban",
-    "geldinstitut",
-    "kontoinhaber",
-    "steuer_id",
-    "bewilligungszeitraum_von",
-    "bewilligungszeitraum_bis",
-    "elternteil1_nachname",
-    "elternteil1_vorname",
-    "elternteil2_nachname",
-    "elternteil2_vorname",
-}
-
-DOCUMENT_TYPES = [
-    "studienbescheinigung",
-    "identitaetsdokument",
-    "vollmacht",
-    "lebenslauf",
-    "kranken_pflegeversicherungsnachweis",
-    "wohnungsnachweis",
-    "einkommensnachweis",
-    "vermoegensnachweis",
-    "leistungsnachweis",
-    "unbekannt",
-]
-
-DOCUMENT_LABELS = {
-    "studienbescheinigung": "Studienbescheinigung",
-    "identitaetsdokument": "Personalausweis oder Reisepass",
-    "vollmacht": "Vollmacht",
-    "lebenslauf": "Lebenslauf",
-    "kranken_pflegeversicherungsnachweis": "Kranken- und Pflegeversicherungsnachweis",
-    "wohnungsnachweis": "Wohnungsnachweis",
-    "einkommensnachweis": "Einkommensnachweis",
-    "vermoegensnachweis": "Vermögensnachweis",
-    "leistungsnachweis": "Leistungsnachweis",
-    "unbekannt": "Unbekanntes Dokument",
-}
 
 
 # ---------------------------------------------------------------------------
@@ -1603,65 +1535,9 @@ def start_application_callback() -> None:
 # ---------------------------------------------------------------------------
 # Checkliste
 # ---------------------------------------------------------------------------
-def categorize_checklist(checklist: dict) -> tuple[dict, dict, dict]:
-    available_items: dict = {}
-    required_open_items: dict = {}
-    optional_items: dict = {}
-
-    hidden_statuses = {
-        "nicht_erforderlich",
-        "nicht_im_fokus",
-    }
-    optional_statuses = {
-        "optional",
-        "zu_pruefen",
-    }
-    available_statuses = {
-        "vorhanden",
-        "zielformular",
-    }
-
-    for item_key, item in checklist.items():
-        status = str(item.get("status", "")).strip().lower()
-        required = item.get("required") is True
-        uploaded = item.get("uploaded") is True
-
-        if uploaded or status in available_statuses:
-            available_items[item_key] = item
-            continue
-
-        if required and status not in hidden_statuses:
-            required_open_items[item_key] = item
-            continue
-
-        if status in optional_statuses:
-            optional_items[item_key] = item
-
-    return available_items, required_open_items, optional_items
 
 
-def render_checklist_items(
-    items: dict,
-    icon: str,
-    empty_message: str,
-) -> None:
-    if not items:
-        st.caption(empty_message)
-        return
 
-    item_list = list(items.values())
-
-    for index, item in enumerate(item_list):
-        label = str(item.get("label", "")).strip()
-        reason = str(item.get("reason", "")).strip()
-
-        st.markdown(f"{icon} **{label}**")
-
-        if reason:
-            st.caption(reason)
-
-        if index < len(item_list) - 1:
-            st.divider()
 
 
 # ---------------------------------------------------------------------------
@@ -2360,7 +2236,6 @@ st.caption(
 # ---------------------------------------------------------------------------
 # Geschützter Administratorbereich
 # ---------------------------------------------------------------------------
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "").strip()
 
 if "admin_login_visible" not in st.session_state:
     st.session_state["admin_login_visible"] = False
