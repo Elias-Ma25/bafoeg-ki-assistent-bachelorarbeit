@@ -24,10 +24,13 @@ class Formblatt1Manager:
     }
 
     GENDER_LABELS = {
-        "weiblich": "1",
-        "maennlich": "2",
-        "divers": "3",
-        "ohne_angabe": "4",
+        "weiblich": "1_weiblich",
+        "maennlich": "2_männlich",
+        "männlich": "2_männlich",
+        "divers": "3_divers",
+        "ohne_angabe": (
+            "4_ohne Angabe (gemäß Geburtenregister)"
+        ),
     }
     NOTICE_RECIPIENT_OPTIONS = [
         "An mich – ständiger Wohnsitz",
@@ -293,6 +296,9 @@ class Formblatt1Manager:
                 input_type="select",
                 options=self.NOTICE_RECIPIENT_OPTIONS,
                 required=True,
+                pdf_field=(
+                    "Der Bescheid soll übermittelt werden an"
+                ),
                 help_text=(
                     "Standardmäßig werden der Bescheid und sonstige Schreiben "
                     "an die antragstellende Person am ständigen Wohnsitz "

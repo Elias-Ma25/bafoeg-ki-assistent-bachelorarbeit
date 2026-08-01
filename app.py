@@ -1690,6 +1690,35 @@ def group_draft_by_section(draft: dict) -> dict[str, list[tuple[str, dict]]]:
         sections.setdefault(section, []).append((field_id, field))
     return sections
 
+def is_form_field_relevant(
+    field_id: str,
+) -> bool:
+    """Prüft, ob ein Formularfeld für den aktuellen Fall relevant ist."""
+
+    case_state = st.session_state.get(
+        "case_state",
+        {},
+    )
+
+    living_situation = str(
+        case_state.get(
+            "wohnsituation",
+            {},
+        ).get(
+            "value",
+            "",
+        )
+    ).strip().lower()
+
+    # Die Eigentumsfrage ist nur relevant,
+    # wenn die Person nicht bei ihren Eltern wohnt.
+    if (
+        field_id == "wohnraum_eigentum_eltern"
+        and living_situation == "bei_eltern"
+    ):
+        return False
+
+    return True
 
 def calculate_section_progress(
     section_fields: list[tuple[str, dict]],
@@ -1701,9 +1730,15 @@ def calculate_section_progress(
     wird sie als teilweise markiert. Fehlende Pflichtfelder führen immer zum
     Status unvollständig.
     """
+    relevant_section_fields = [
+        (field_id, field)
+        for field_id, field in section_fields
+        if is_form_field_relevant(field_id)
+    ]
+
     required_fields = [
         field
-        for _, field in section_fields
+        for _, field in relevant_section_fields
         if field.get("required") is True
     ]
 
@@ -1712,16 +1747,26 @@ def calculate_section_progress(
         for field in required_fields
         if str(field.get("value", "")).strip()
     )
-    required_open = len(required_fields) - required_filled
 
-    total = len(section_fields)
+    required_open = (
+            len(required_fields)
+            - required_filled
+    )
+
+    total = len(
+        relevant_section_fields
+    )
+
     filled = sum(
         1
-        for _, field in section_fields
+        for _, field in relevant_section_fields
         if str(field.get("value", "")).strip()
     )
 
-    all_filled = total > 0 and filled == total
+    all_filled = (
+            total > 0
+            and filled == total
+    )
 
     return {
         "complete": all_filled,
