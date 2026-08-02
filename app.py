@@ -254,6 +254,7 @@ def initialize_state() -> None:
         "career_row_count": 1,
         "manual_form_values": {},
         "form_saved": False,
+        "mock_submission_done": False,
         "edit_mode": False,
         "form_edit_version": 0,
         "editing_section": "",
@@ -3079,6 +3080,7 @@ confirm_clicked = st.button(
 
 if confirm_clicked:
     st.session_state["form_saved"] = True
+    st.session_state["mock_submission_done"] = False
     st.session_state["assistant_mode"] = "confirmed"
 
     append_chat(
@@ -3111,13 +3113,51 @@ if st.session_state["form_saved"]:
     try:
         pdf_bytes = pdf_filler.fill(FORM_TEMPLATE, confirmed_draft)
 
-        st.download_button(
-            "Formblatt 1 als PDF vorausfüllen",
-            data=pdf_bytes,
-            file_name="Formblatt_1_vorausgefuellt.pdf",
-            mime="application/pdf",
-            use_container_width=True,
-        )
+        download_column, submit_column = st.columns(2)
+
+        with download_column:
+            st.download_button(
+                "Formblatt 1 als PDF vorausfüllen",
+                data=pdf_bytes,
+                file_name="Formblatt_1_vorausgefuellt.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+
+        with submit_column:
+            submit_application_clicked = st.button(
+                "Antrag senden",
+                type="primary",
+                use_container_width=True,
+                key="submit_application_prototype",
+            )
+
+        if submit_application_clicked:
+            st.session_state["mock_submission_done"] = True
+
+            append_chat(
+                "assistant",
+                (
+                    "Vielen Dank. Der simulierte Sendevorgang wurde abgeschlossen. "
+                    "Da es sich um einen Prototyp handelt, wurde der Antrag nicht "
+                    "an ein BAföG-Amt übermittelt."
+                ),
+            )
+
+            if st.session_state.get(
+                    "mock_submission_done",
+                    False,
+            ):
+                st.success(
+                    "Vielen Dank! Der simulierte Sendevorgang wurde erfolgreich abgeschlossen."
+                )
+
+                st.info(
+                    "Wichtiger Hinweis: Diese Anwendung ist ein Prototyp im Rahmen "
+                    "einer Bachelorarbeit. Der Antrag wurde nicht an ein BAföG-Amt, "
+                    "BAföG Digital oder eine andere Behörde übermittelt. Es wurden "
+                    "keine Unterlagen tatsächlich eingereicht."
+                )
 
         st.warning(
             "Die PDF-Vorlage muss vor der Einreichung vollständig kontrolliert werden. "
