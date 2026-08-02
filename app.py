@@ -1455,14 +1455,14 @@ def move_to_next_application_step(
 
     if missing_field_names:
         message += (
-            "\n\nBitte ergänze in der Vorschau insbesondere: "
+            "\n\nBitte ergänze in der unteren Vorschau insbesondere: "
             f"{missing_field_names}."
         )
 
     message += (
         "\n\nKontrolliere die erkannten Angaben, korrigiere Fehler "
         "und ergänze fehlende Felder. Anschließend kannst du die "
-        "Angaben speichern und Formblatt 1 als PDF vorausfüllen."
+        "Angaben speichern und Formblatt 1 als PDF herunterladen."
     )
 
     append_chat(
