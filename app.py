@@ -5,6 +5,7 @@ import re
 from datetime import date
 from typing import Any
 from src.ui_styles import UiStyles
+from src.welcome_view import WelcomeView
 
 import markdown
 import streamlit as st
@@ -408,7 +409,7 @@ def build_process_card() -> str:
         mode_title = "Freie BAföG-Beratung"
         mode_icon = "💬"
         description = (
-            "Du kannst allgemeine Fragen zur BAföG-Erstantragstellung stellen."
+            "Du kannst allgemeine Fragen zur BAföG stellen."
         )
     elif assistant_mode == "initial_documents":
         mode_title = "BAföG-Erstantrag"
@@ -2394,13 +2395,9 @@ if st.session_state["logout_confirmation_visible"]:
 # ---------------------------------------------------------------------------
 # Kopfbereich
 # ---------------------------------------------------------------------------
-st.title("📄 BAföG KI-Assistent – dokumentenbasierter Erstantrag")
+st.title("📄 BAföG KI-Assistent")
 
-st.caption(
-    "Abgrenzung des Prototyps: deutsche Antragsteller, BAföG-Erstantrag "
-    "und Studium in Deutschland. Die Ausgabe ist eine prototypische "
-    "Vorbereitung und keine rechtsverbindliche Entscheidung."
-)
+WelcomeView.render()
 
 # ---------------------------------------------------------------------------
 # Geschützter Administratorbereich

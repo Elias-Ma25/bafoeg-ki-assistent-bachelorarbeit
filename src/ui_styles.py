@@ -11,6 +11,100 @@ class UiStyles:
         st.html(
             """
             <style>
+            
+            /*  =========================================================
+                Einführungsbereich
+                ========================================================= */
+
+            .st-key-welcome_intro_card {
+                background:
+                    linear-gradient(
+                        135deg,
+                        #f8fbff 0%,
+                        #eef7ff 100%
+                    );  
+
+                border: 1px solid #bfdbfe;
+                border-radius: 18px;
+
+                padding: 1rem 1.2rem 1.2rem;
+                margin: 0.75rem 0 1.25rem;
+            
+                box-shadow:
+                    0 6px 20px rgba(30, 64, 175, 0.08);
+            }
+            
+            .st-key-welcome_intro_card h3 {
+                color: #1e3a5f;
+                margin-top: 0;
+                margin-bottom: 0.4rem;
+            }
+            
+            
+            /* Karten der beiden Nutzungsmodi */
+            
+            .st-key-welcome_consultation_card,
+            .st-key-welcome_application_card {
+                background: #ffffff;
+            
+                border: 1px solid #dbeafe;
+                border-radius: 14px;
+            
+                padding: 0.8rem 1rem;
+                min-height: 180px;
+            
+                box-shadow:
+                    0 2px 10px rgba(15, 23, 42, 0.05);
+            }
+            
+            .st-key-welcome_consultation_card h4,
+            .st-key-welcome_application_card h4 {
+                color: #0f4c81;
+                margin-top: 0;
+            }
+            
+            
+            /* Schließen-Schaltfläche */
+            
+            .st-key-welcome_intro_close button {
+                min-width: 2.1rem !important;
+                width: 2.1rem !important;
+                height: 2.1rem !important;
+            
+                padding: 0 !important;
+                border: none !important;
+                border-radius: 50% !important;
+            
+                background: transparent !important;
+                color: #64748b !important;
+            
+                font-size: 1rem !important;
+                font-weight: 700 !important;
+            }
+            
+            .st-key-welcome_intro_close button:hover {
+                background: #dbeafe !important;
+                color: #1e3a5f !important;
+            }
+            
+            
+            /* Einführung erneut öffnen */
+            
+            .st-key-welcome_intro_reopen button {
+                background: #eff6ff !important;
+                border: 1px solid #93c5fd !important;
+                color: #1d4ed8 !important;
+            
+                font-weight: 600 !important;
+                border-radius: 10px !important;
+            }
+            
+            .st-key-welcome_intro_reopen button:hover {
+                background: #dbeafe !important;
+                border-color: #60a5fa !important;
+                color: #1e40af !important;
+            }
+            
             /* ---------------------------------------------------------
                Formblatt 1 herunterladen – Grün
                --------------------------------------------------------- */
