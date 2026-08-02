@@ -971,10 +971,12 @@ def get_context(question: str) -> str:
             "abgefragt werden."
         ) from exc
 
+
 def answer_general_question(question: str) -> str:
     if client is None:
         return "Kein OpenAI API-Key gefunden."
 
+    # RAG-Kontext für die AKTUELLE Frage holen
     context = get_context(question)
 
     messages = [
@@ -987,15 +989,28 @@ def answer_general_question(question: str) -> str:
                 "eindeutige Antwort enthält, sage das offen. Gib keine "
                 "rechtsverbindliche Entscheidung ab."
             ),
-        },
-        {
-            "role": "user",
-            "content": (
-                f"Frage: {question}\n\n"
-                f"Kontext aus der BAföG-Wissensbasis:\n{context}"
-            ),
-        },
+        }
     ]
+
+    # NEU: Bisherigen Chatverlauf aus dem Session State laden
+    # Wir nehmen alle Nachrichten BIS AUF DIE LETZTE ([:-1]),
+    # da die letzte Nachricht die aktuelle 'question' ist, die wir gleich separat mit RAG-Kontext anhängen.
+    chat_history = st.session_state.get("chat_history", [])[:-1]
+
+    for msg in chat_history:
+        messages.append({
+            "role": msg.get("role"),
+            "content": msg.get("content")
+        })
+
+    # Aktuelle Frage inkl. RAG-Kontext als letzte Nachricht anhängen
+    messages.append({
+        "role": "user",
+        "content": (
+            f"Frage: {question}\n\n"
+            f"Kontext aus der BAföG-Wissensbasis:\n{context}"
+        ),
+    })
 
     response = client.chat.completions.create(
         model=OPENAI_MODEL,
@@ -3084,10 +3099,10 @@ with right_col:
         with st.container(border=True):
             st.markdown("### Antragsassistent starten")
 
-            st.write(
-                "Im freien Chat kannst du allgemeine Fragen zur "
-                "BAföG-Erstantragstellung stellen."
-            )
+            # st.write(
+            #     "Im freien Chat kannst du allgemeine Fragen zur "
+            #     "BAföG-Erstantragstellung stellen."
+            # )
 
             st.write(
                 "Starte den Antragsassistenten, um Nachweise hochzuladen, "
