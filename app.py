@@ -69,11 +69,6 @@ def require_app_access() -> None:
         "Testpersonen im Rahmen einer Bachelorarbeit vorgesehen."
     )
 
-    # st.info(
-    #     "Bitte verwende ausschließlich die bereitgestellten "
-    #     "synthetischen Testdokumente und keine eigenen BAföG-Unterlagen."
-    # )
-
     with st.form("app_access_form"):
         entered_password = st.text_input(
             "Zugangskennwort",
