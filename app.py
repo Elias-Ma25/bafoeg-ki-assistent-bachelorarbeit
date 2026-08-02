@@ -2161,6 +2161,57 @@ def sync_training_address_checkbox() -> None:
     if st.session_state.get("same_as_main_address") is True:
         copy_main_address_to_training_address()
 
+def sync_financial_form_values_to_case_state(
+    edited_values: dict[str, str],
+) -> None:
+    """Synchronisiert Einkommen und Vermögen aus der Vorschau.
+    """
+
+    financial_fields = {
+        "eigenes_einkommen": {
+            "warning_state": "show_income_form_warning",
+            "warning_trigger": "ja",
+        },
+        "vermoegen_unter_grenze": {
+            "warning_state": "show_asset_form_warning",
+            "warning_trigger": "nein",
+        },
+    }
+
+    for field_name, configuration in financial_fields.items():
+        if field_name not in edited_values:
+            continue
+
+        new_value = str(
+            edited_values[field_name]
+        ).strip().lower()
+
+        if new_value not in {"ja", "nein"}:
+            continue
+
+        old_value = str(
+            st.session_state["case_state"]
+            .get(field_name, {})
+            .get("value", "")
+        ).strip().lower()
+
+        st.session_state["case_state"][field_name] = {
+            "value": new_value,
+            "source": "user_confirmed",
+            "confidence": "high",
+        }
+
+        # Wurde die Angabe geändert und löst sie einen Hinweis aus,
+        # wird ein zuvor ausgeblendeter Hinweis wieder sichtbar.
+        if (
+            old_value != new_value
+            and new_value
+            == configuration["warning_trigger"]
+        ):
+            st.session_state[
+                configuration["warning_state"]
+            ] = True
+
 def render_categorized_form_preview(draft: dict) -> None:
     sections = group_draft_by_section(draft)
     editing_section = st.session_state.get("editing_section", "")
@@ -2405,6 +2456,9 @@ def render_categorized_form_preview(draft: dict) -> None:
                 )
 
                 st.session_state["manual_form_values"] = merged_values
+                sync_financial_form_values_to_case_state(
+                    edited_values
+                )
 
                 if "bescheid_empfaenger" in edited_values:
                     selected_recipient = str(
@@ -2417,18 +2471,6 @@ def render_categorized_form_preview(draft: dict) -> None:
                         "confidence": "high",
                     }
 
-                # Änderung beim Vermögen zusätzlich im case_state speichern,
-                # weil die Checkliste ihre Regeln aus case_state liest.
-                if "vermoegen_unter_grenze" in edited_values:
-                    selected_asset_value = str(
-                        edited_values["vermoegen_unter_grenze"]
-                    ).strip().lower()
-
-                    st.session_state["case_state"]["vermoegen_unter_grenze"] = {
-                        "value": selected_asset_value,
-                        "source": "user_confirmed",
-                        "confidence": "high",
-                    }
                 # Wohnsituation mit der dynamischen Checkliste synchronisieren.
                 if "wohnsituation" in edited_values:
                     selected_living_value = str(
