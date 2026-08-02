@@ -1,10 +1,9 @@
 from __future__ import annotations
-
 from io import BytesIO
 from pathlib import Path
 from typing import Any
 import re
-from datetime import datetime
+from datetime import date,datetime
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import BooleanObject, NameObject
 
@@ -19,6 +18,16 @@ class PdfFormFiller:
         "privat versichert": "/privat versichert",
         "anders versichert": "/anders versichert",
     }
+
+    ASSET_PDF_FIELD_UNDER_30 = (
+        "unter 30 Jahre alt und Vermögen "
+        "insgesamt unter 10.000 Euro"
+    )
+
+    ASSET_PDF_FIELD_FROM_30 = (
+        "über 30 Jahre alt und Vermögen "
+        "insgesamt unter 30.000 Euro"
+    )
 
     NOTICE_RECIPIENT_PDF_STATES = {
         "An mich – ständiger Wohnsitz": (
@@ -40,6 +49,103 @@ class PdfFormFiller:
             "/die von mir bevollm鋍htigte Person"
         ),
     }
+
+    @staticmethod
+    def _parse_birthdate(
+            value: str,
+    ) -> date | None:
+        """Liest das Geburtsdatum aus unterstützten Formaten."""
+
+        value = str(value or "").strip()
+
+        if not value:
+            return None
+
+        formats = (
+            "%d.%m.%Y",
+            "%d/%m/%Y",
+            "%d-%m-%Y",
+            "%Y-%m-%d",
+        )
+
+        for date_format in formats:
+            try:
+                return datetime.strptime(
+                    value,
+                    date_format,
+                ).date()
+            except ValueError:
+                continue
+
+        return None
+
+    @staticmethod
+    def _calculate_age(
+            birthdate: date,
+            reference_date: date | None = None,
+    ) -> int:
+        """Berechnet das Alter am Tag der PDF-Erstellung."""
+
+        current_date = reference_date or date.today()
+
+        return (
+                current_date.year
+                - birthdate.year
+                - (
+                        (current_date.month, current_date.day)
+                        < (birthdate.month, birthdate.day)
+                )
+        )
+
+    def _add_asset_selection(
+            self,
+            values: dict[str, str],
+            draft: dict[str, dict[str, Any]],
+    ) -> None:
+        """Überträgt die Vermögensantwort in die passende Altersgruppe."""
+
+        asset_answer = str(
+            draft.get(
+                "vermoegen_unter_grenze",
+                {},
+            ).get(
+                "value",
+                "",
+            )
+        ).strip().lower()
+
+        if asset_answer not in {"ja", "nein"}:
+            return
+
+        birthdate_value = str(
+            draft.get(
+                "geburtsdatum",
+                {},
+            ).get(
+                "value",
+                "",
+            )
+        ).strip()
+
+        birthdate = self._parse_birthdate(
+            birthdate_value
+        )
+
+        if birthdate is None:
+            return
+
+        age = self._calculate_age(
+            birthdate
+        )
+
+        if age < 30:
+            pdf_field = self.ASSET_PDF_FIELD_UNDER_30
+        else:
+            pdf_field = self.ASSET_PDF_FIELD_FROM_30
+
+        values[pdf_field] = self._button(
+            asset_answer
+        )
 
     @staticmethod
     def _button(value: str) -> str:
@@ -287,6 +393,13 @@ class PdfFormFiller:
         full_name = ", ".join(part for part in [nachname, vorname] if part)
         if full_name:
             values["auszubildende Person"] = full_name
+
+        # Vermögensantwort altersabhängig in das passende
+        # Ja-/Nein-Feld des Formblatts übertragen.
+        self._add_asset_selection(
+            values=values,
+            draft=draft,
+        )
 
         return values
 

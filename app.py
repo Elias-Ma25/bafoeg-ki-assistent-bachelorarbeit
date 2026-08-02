@@ -3120,11 +3120,13 @@ if st.session_state["form_saved"]:
         )
 
         st.warning(
-            "Die PDF-Vorlage muss vor der Einreichung vollständig kontrolliert "
-            "werden. Nicht unterstützte oder offene Felder bleiben leer. Die "
-            "bereitgestellte Vorlage enthält bei der Vermögensfrage möglicherweise "
-            "ältere Grenzbeträge; deshalb wird dieses Kontrollkästchen nicht "
-            "automatisch gesetzt."
+            "Die PDF-Vorlage muss vor der Einreichung vollständig kontrolliert werden. "
+            "Nicht unterstützte oder offene Felder bleiben leer. "
+        )
+        st.info(
+            "Die bereitgestellte Vorlage enthält bei der Vermögensfrage ältere Grenzbeträge."
+            "neues Gesetz für Auszubildende, die das 30. Lebensjahr noch nicht vollendet haben, 15 000 Euro, "
+            "und für Auszubildende, die das 30. Lebensjahr vollendet haben, 45 000 Euro"
         )
 
     except Exception as exc:  # noqa: BLE001

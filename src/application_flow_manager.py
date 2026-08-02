@@ -12,8 +12,10 @@ class ApplicationFlowManager:
     noch bereits vom Nutzer bestätigt wurde.
     """
 
-    ASSET_LIMIT_UNDER_30 = 15_000
-    ASSET_LIMIT_FROM_30 = 45_000
+    # Schwellen der vereinfachten Vermögensangabe
+    # im offiziellen Formblatt 1, nicht die gesetzlichen Freibeträge.
+    FORM_ASSET_THRESHOLD_UNDER_30 = 10_000
+    FORM_ASSET_THRESHOLD_FROM_30 = 30_000
 
     def __init__(self) -> None:
         self.steps: list[dict[str, Any]] = [
@@ -135,15 +137,27 @@ class ApplicationFlowManager:
             (today.month, today.day) < (birthdate.month, birthdate.day)
         )
 
-    def get_asset_limit(self, user_profile: dict, reference_date: date | None = None) -> int | None:
-        age = self.calculate_age(user_profile, reference_date)
+    def get_form_asset_threshold(
+            self,
+            user_profile: dict,
+            reference_date: date | None = None,
+    ) -> int | None:
+        age = self.calculate_age(
+            user_profile,
+            reference_date,
+        )
+
         if age is None:
             return None
-        return self.ASSET_LIMIT_UNDER_30 if age < 30 else self.ASSET_LIMIT_FROM_30
+
+        if age < 30:
+            return self.FORM_ASSET_THRESHOLD_UNDER_30
+
+        return self.FORM_ASSET_THRESHOLD_FROM_30
 
     def build_asset_question(self, user_profile: dict) -> str:
         age = self.calculate_age(user_profile)
-        limit = self.get_asset_limit(user_profile)
+        limit = self.get_form_asset_threshold(user_profile)
 
         if age is None or limit is None:
             return (
