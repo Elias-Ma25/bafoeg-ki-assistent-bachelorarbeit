@@ -2837,11 +2837,6 @@ with right_col:
                 on_click=start_application_callback,
             )
 
-            # st.caption(
-            #     "Nach dem Start erscheint hier der Bereich zum Hochladen "
-            #     "der Studienbescheinigung und weiterer Nachweise."
-            # )
-
     # Uploadbereich nur im Antragsmodus anzeigen.
     else:
         st.subheader("📤 Nachweise hochladen")
