@@ -11,6 +11,16 @@ from pypdf.generic import BooleanObject, NameObject
 class PdfFormFiller:
     """Überträgt bestätigte Vorschauwerte in ausgewählte AcroForm-Felder."""
 
+    COMPETING_BENEFIT_PDF_FIELDS = {
+        (
+            "Anwärterbezüge oder ähnliche Leistungen "
+            "aus öffentlichen Mitteln"
+        ),
+        "Leistungen SGB II oder SGB III",
+        "Leistungen Begabtenförderungswerk",
+        "nein, keine der vorstehenden Leistungen",
+    }
+
     INSURANCE_PDF_STATES = {
         "gesetzlich familienversichert": "/gesetzlich familienversichert",
         "studentisch gesetzlich versichert": "/studentisch familienversichert",
@@ -312,6 +322,15 @@ class PdfFormFiller:
         for field in draft.values():
             value = str(field.get("value", "")).strip()
             pdf_field = field.get("pdf_field")
+
+            if pdf_field in self.COMPETING_BENEFIT_PDF_FIELDS:
+                values[pdf_field] = (
+                    "/Ja"
+                    if value.lower() == "ja"
+                    else "/Off"
+                )
+                continue
+
             if not value or not pdf_field:
                 continue
 
@@ -324,7 +343,6 @@ class PdfFormFiller:
                     value
                 )
                 continue
-
 
             if (
                     pdf_field

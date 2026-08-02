@@ -141,10 +141,52 @@ def get_hybrid_options(
                 "case_updates": {"vermoegen_unter_grenze": "nein"},
             },
         ],
+        "konkurrierende_leistungen": [
+            {
+                "label": "Nein, keine der genannten Leistungen",
+                "case_updates": {
+                    "konkurrierende_anwaerterbezuege": "nein",
+                    "konkurrierende_weiterbildung": "nein",
+                    "konkurrierende_begabtenfoerderung": "nein",
+                    "konkurrierende_keine": "ja",
+                },
+            },
+            {
+                "label": (
+                    "Anwärterbezüge oder ähnliche Leistungen "
+                    "aus öffentlichen Mitteln"
+                ),
+                "case_updates": {
+                    "konkurrierende_anwaerterbezuege": "ja",
+                    "konkurrierende_weiterbildung": "nein",
+                    "konkurrierende_begabtenfoerderung": "nein",
+                    "konkurrierende_keine": "nein",
+                },
+            },
+            {
+                "label": (
+                    "Leistungen für berufliche Aus- oder Weiterbildung "
+                    "nach SGB II oder SGB III"
+                ),
+                "case_updates": {
+                    "konkurrierende_anwaerterbezuege": "nein",
+                    "konkurrierende_weiterbildung": "ja",
+                    "konkurrierende_begabtenfoerderung": "nein",
+                    "konkurrierende_keine": "nein",
+                },
+            },
+            {
+                "label": "Leistungen von einem Begabtenförderungswerk",
+                "case_updates": {
+                    "konkurrierende_anwaerterbezuege": "nein",
+                    "konkurrierende_weiterbildung": "nein",
+                    "konkurrierende_begabtenfoerderung": "ja",
+                    "konkurrierende_keine": "nein",
+                },
+            },
+        ],
     }
-
     return options_by_step.get(step_key, [])
-
 
 def build_choice_result(option: dict[str, Any]) -> dict[str, Any]:
     """Überführt eine angeklickte Option in das Format des LLM-Interpreters."""

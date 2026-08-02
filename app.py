@@ -216,6 +216,12 @@ def initial_case_state() -> dict[str, dict[str, str]]:
         "kinder",
         "krankenversicherung",
         "pflegeversicherung_selbst_beitragspflichtig",
+
+        "konkurrierende_anwaerterbezuege",
+        "konkurrierende_weiterbildung",
+        "konkurrierende_begabtenfoerderung",
+        "konkurrierende_keine",
+
         "eigenes_einkommen",
         "vermoegen_unter_grenze",
         "verhaeltnis_elternteile",
@@ -259,6 +265,8 @@ def initialize_state() -> None:
         "mock_submission_done": False,
         "show_pdf_check_warning": True,
         "show_asset_limit_info": True,
+        "show_income_form_warning": True,
+        "show_asset_form_warning": True,
         "edit_mode": False,
         "form_edit_version": 0,
         "editing_section": "",
@@ -1053,9 +1061,162 @@ def render_hybrid_answer_controls() -> None:
                 use_container_width=False,
             )
 
-    if options:
+    if (
+            current_step.get("key")
+            == "konkurrierende_leistungen"
+    ):
+        st.caption(
+            "Wähle alle Leistungen aus, die auf dich zutreffen. "
+            "Mehrere Angaben sind möglich."
+        )
+
+        competing_choices = [
+            (
+                "konkurrierende_anwaerterbezuege",
+                (
+                    "Anwärterbezüge oder ähnliche Leistungen "
+                    "aus öffentlichen Mitteln"
+                ),
+            ),
+            (
+                "konkurrierende_weiterbildung",
+                (
+                    "Leistungen für berufliche Aus- oder "
+                    "Weiterbildung nach SGB II oder SGB III"
+                ),
+            ),
+            (
+                "konkurrierende_begabtenfoerderung",
+                "Leistungen von einem Begabtenförderungswerk",
+            ),
+        ]
+
+        selected_choices: dict[str, bool] = {}
+
+        for field_name, label in competing_choices:
+            selected_choices[field_name] = st.checkbox(
+                label,
+                key=(
+                    "competing_benefit_"
+                    f"{field_name}"
+                ),
+            )
+
+        no_benefits_selected = st.checkbox(
+            "Nein, keine der genannten Leistungen",
+            key="competing_benefit_none",
+        )
+
+        save_competing_benefits = st.button(
+            "Auswahl übernehmen",
+            type="primary",
+            use_container_width=True,
+            key="save_competing_benefits",
+        )
+
+        st.caption(
+            "„Keine der genannten Leistungen“ darf nicht gleichzeitig "
+            "mit einer anderen Leistung ausgewählt werden. "
+            "Alternativ kannst du deine Situation frei im Textfeld beschreiben."
+        )
+
+        if save_competing_benefits:
+            selected_specific_benefits = [
+                field_name
+                for field_name, selected
+                in selected_choices.items()
+                if selected
+            ]
+
+            if (
+                    not selected_specific_benefits
+                    and not no_benefits_selected
+            ):
+                st.warning(
+                    "Bitte wähle mindestens eine Option aus."
+                )
+                return
+
+            if (
+                    no_benefits_selected
+                    and selected_specific_benefits
+            ):
+                st.error(
+                    "„Keine der genannten Leistungen“ kann nicht "
+                    "zusammen mit einer anderen Leistung ausgewählt werden."
+                )
+                return
+
+            case_updates = {
+                field_name: (
+                    "ja"
+                    if selected_choices[field_name]
+                    else "nein"
+                )
+                for field_name, _ in competing_choices
+            }
+
+            case_updates["konkurrierende_keine"] = (
+                "ja"
+                if no_benefits_selected
+                else "nein"
+            )
+
+            result = {
+                "should_save": True,
+                "profile_updates": {},
+                "case_updates": case_updates,
+                "confidence": "high",
+            }
+
+            valid, validation_message = validate_result(
+                result,
+                current_step,
+            )
+
+            if not valid:
+                st.error(validation_message)
+                return
+
+            if no_benefits_selected:
+                selected_labels = [
+                    "Keine der genannten Leistungen"
+                ]
+            else:
+                selected_labels = [
+                    label
+                    for field_name, label in competing_choices
+                    if selected_choices[field_name]
+                ]
+
+            append_chat(
+                "user",
+                (
+                        "Auswahl: "
+                        + ", ".join(selected_labels)
+                ),
+            )
+
+            apply_interpreter_updates(
+                result,
+                source="user_selection",
+            )
+
+            st.session_state["last_prompted_step"] = ""
+
+            move_to_next_application_step()
+            st.rerun()
+
+
+    elif options:
         for index, option in enumerate(options):
-            label = str(option.get("label", "")).strip()
+            label = str(
+                option.get(
+                    "label",
+                    "",
+                )
+            ).strip()
+
             if not label:
                 continue
 
@@ -1070,7 +1231,10 @@ def render_hybrid_answer_controls() -> None:
             )
 
             if clicked:
-                result = build_choice_result(option)
+                result = build_choice_result(
+                    option
+                )
+
                 valid, validation_message = validate_result(
                     result,
                     current_step,
@@ -1080,13 +1244,20 @@ def render_hybrid_answer_controls() -> None:
                     st.error(validation_message)
                     return
 
-                append_chat("user", f"Auswahl: {label}")
+                append_chat(
+                    "user",
+                    f"Auswahl: {label}",
+                )
+
                 apply_interpreter_updates(
                     result,
                     source="user_selection",
                 )
 
-                st.session_state["last_prompted_step"] = ""
+                st.session_state[
+                    "last_prompted_step"
+                ] = ""
+
                 move_to_next_application_step()
                 st.rerun()
 
@@ -1094,6 +1265,7 @@ def render_hybrid_answer_controls() -> None:
             "Du kannst eine Option anklicken oder deine Situation "
             "weiterhin frei im Textfeld beschreiben."
         )
+
     else:
         st.caption(
             "Für diese Frage gibt es keine feste Schnellauswahl. "
@@ -1515,6 +1687,8 @@ def reset_application() -> None:
     st.session_state["mock_submission_done"] = False
     st.session_state["show_pdf_check_warning"] = True
     st.session_state["show_asset_limit_info"] = True
+    st.session_state["show_income_form_warning"] = True
+    st.session_state["show_asset_form_warning"] = True
     st.session_state["edit_mode"] = False
     st.session_state["form_edit_version"] = 0
     st.session_state["editing_section"] = ""
@@ -2167,6 +2341,56 @@ def render_categorized_form_preview(draft: dict) -> None:
 
 
             elif save_section:
+                competing_fields = [
+                    "konkurrierende_anwaerterbezuege",
+                    "konkurrierende_weiterbildung",
+                    "konkurrierende_begabtenfoerderung",
+                    "konkurrierende_keine",
+                ]
+
+                if any(
+                        field_name in edited_values
+                        for field_name in competing_fields
+                ):
+                    competing_values = {
+                        field_name: str(
+                            edited_values.get(
+                                field_name,
+                                merged_values.get(field_name, ""),
+                            )
+                        ).strip().lower()
+                        for field_name in competing_fields
+                    }
+
+                    first_three = competing_fields[:3]
+
+                    if competing_values["konkurrierende_keine"] == "ja":
+                        for field_name in first_three:
+                            competing_values[field_name] = "nein"
+
+                    elif any(
+                            competing_values[field_name] == "ja"
+                            for field_name in first_three
+                    ):
+                        competing_values["konkurrierende_keine"] = "nein"
+
+                    elif all(
+                            competing_values[field_name] == "nein"
+                            for field_name in first_three
+                    ):
+                        competing_values["konkurrierende_keine"] = "ja"
+
+                    for field_name, selected_value in competing_values.items():
+                        st.session_state["case_state"][field_name] = {
+                            "value": selected_value,
+                            "source": "user_confirmed",
+                            "confidence": "high",
+                        }
+
+                        merged_values[field_name] = selected_value
+
+                    st.session_state["manual_form_values"] = merged_values
+
                 merged_values = dict(
                     st.session_state.get(
                         "manual_form_values",
@@ -2968,11 +3192,124 @@ available_items, required_open_items, optional_items = categorize_checklist(
     checklist
 )
 
+def render_reopenable_error_notice(
+    title: str,
+    message: str,
+    state_key: str,
+    key_prefix: str,
+) -> None:
+    """Zeigt einen roten Hinweis, der aus- und eingeblendet werden kann."""
+
+    is_visible = st.session_state.get(
+        state_key,
+        True,
+    )
+
+    # ------------------------------------------------------------
+    # Hinweis ist sichtbar
+    # ------------------------------------------------------------
+    if is_visible:
+        message_column, close_column = st.columns(
+            [0.95, 0.05]
+        )
+
+        with message_column:
+            st.error(
+                f"**{title}**\n\n"
+                f"{message}\n\n"
+                "**Der Nachweis ersetzt die Angaben "
+                "im Formblatt nicht.**"
+            )
+
+        with close_column:
+            close_clicked = st.button(
+                "✕",
+                key=f"{key_prefix}_hide",
+                help="Hinweis ausblenden",
+                use_container_width=True,
+            )
+
+        if close_clicked:
+            st.session_state[state_key] = False
+            st.rerun()
+
+        return
+
+    # ------------------------------------------------------------
+    # Hinweis wurde ausgeblendet
+    # ------------------------------------------------------------
+    show_clicked = st.button(
+        f"⚠️ {title} anzeigen",
+        key=f"{key_prefix}_show",
+        help="Den ausgeblendeten Hinweis erneut anzeigen",
+        use_container_width=False,
+    )
+
+    if show_clicked:
+        st.session_state[state_key] = True
+        st.rerun()
+
+def render_financial_form_warnings() -> None:
+    """Zeigt ergänzende Hinweise zu Einkommen und Vermögen."""
+
+    case_state = st.session_state.get(
+        "case_state",
+        {},
+    )
+
+    income_value = str(
+        case_state.get(
+            "eigenes_einkommen",
+            {},
+        ).get(
+            "value",
+            "",
+        )
+    ).strip().lower()
+
+    asset_value = str(
+        case_state.get(
+            "vermoegen_unter_grenze",
+            {},
+        ).get(
+            "value",
+            "",
+        )
+    ).strip().lower()
+
+    if income_value == "ja":
+        render_reopenable_error_notice(
+            title="Wichtiger Hinweis zum Einkommen",
+            message=(
+                "Du hast angegeben, dass du voraussichtlich "
+                "eigenes Einkommen erzielst. Trage im Abschnitt "
+                "„Angaben zu meinem Einkommen“ des Formblatts 1 "
+                "die jeweilige Einkommensart sowie den "
+                "voraussichtlichen Gesamtbetrag im "
+                "Bewilligungszeitraum ein."
+            ),
+            state_key="show_income_form_warning",
+            key_prefix="income_form_warning",
+        )
+
+    if asset_value == "nein":
+        render_reopenable_error_notice(
+            title="Wichtiger Hinweis zum Vermögen",
+            message=(
+                "Du hast angegeben, dass dein Vermögen nicht unter "
+                "der Vermögensgrenze des Formblatts liegt. Trage im "
+                "Abschnitt „Angaben zu meinem Vermögen“ die einzelnen "
+                "Vermögensarten und die jeweiligen Werte ein."
+            ),
+            state_key="show_asset_form_warning",
+            key_prefix="asset_form_warning",
+        )
 st.caption(
     f"{len(available_items)} vorhanden · "
     f"{len(required_open_items)} noch erforderlich · "
     f"{len(optional_items)} optional oder zu prüfen"
 )
+render_financial_form_warnings()
 
 with st.expander(
     f"✅ Bereits vorhanden ({len(available_items)})",

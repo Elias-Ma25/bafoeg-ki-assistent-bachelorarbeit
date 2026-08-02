@@ -88,6 +88,33 @@ class ApplicationFlowManager:
                 ),
             },
             {
+                "key": "konkurrierende_leistungen",
+                "target": "case_state",
+                "target_fields": [
+                    "konkurrierende_anwaerterbezuege",
+                    "konkurrierende_weiterbildung",
+                    "konkurrierende_begabtenfoerderung",
+                    "konkurrierende_keine",
+                ],
+                "question": (
+                    "Beziehst du während des beantragten Bewilligungszeitraums "
+                    "eine der folgenden konkurrierenden Leistungen oder hast du "
+                    "eine davon beantragt?\n\n"
+                    "- Anwärterbezüge oder ähnliche Leistungen aus öffentlichen Mitteln\n"
+                    "- Leistungen für eine berufliche Aus- oder Weiterbildung "
+                    "nach dem SGB II oder SGB III\n"
+                    "- Leistungen von einem Begabtenförderungswerk\n"
+                    "- Keine der genannten Leistungen\n\n"
+                    "Falls mehrere Leistungen zutreffen, nenne bitte alle."
+                ),
+                "help": (
+                    "Das Formblatt weist darauf hin, dass beim Bezug einer der "
+                    "genannten konkurrierenden Leistungen grundsätzlich kein "
+                    "Anspruch auf BAföG-Leistungen besteht. BAföG selbst ist hier "
+                    "nicht als konkurrierende Leistung anzugeben."
+                ),
+            },
+            {
                 "key": "eigenes_einkommen",
                 "target": "case_state",
                 "target_fields": ["eigenes_einkommen"],
@@ -196,6 +223,44 @@ class ApplicationFlowManager:
 
     def is_step_answered(self, step: dict, user_profile: dict, case_state: dict) -> bool:
         key = step["key"]
+
+        if key == "konkurrierende_leistungen":
+            benefit_fields = [
+                "konkurrierende_anwaerterbezuege",
+                "konkurrierende_weiterbildung",
+                "konkurrierende_begabtenfoerderung",
+                "konkurrierende_keine",
+            ]
+
+            values = {
+                field_name: self._value(
+                    case_state,
+                    field_name,
+                ).lower()
+                for field_name in benefit_fields
+            }
+
+            if any(
+                    value not in {"ja", "nein"}
+                    for value in values.values()
+            ):
+                return False
+
+            first_three = benefit_fields[:3]
+
+            if values["konkurrierende_keine"] == "ja":
+                return all(
+                    values[field_name] == "nein"
+                    for field_name in first_three
+                )
+
+            return (
+                    values["konkurrierende_keine"] == "nein"
+                    and any(
+                values[field_name] == "ja"
+                for field_name in first_three
+            )
+            )
 
         if key == "geburtsdatum":
             return self.parse_birthdate(

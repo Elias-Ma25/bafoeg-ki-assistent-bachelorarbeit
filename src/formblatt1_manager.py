@@ -377,6 +377,76 @@ class Formblatt1Manager:
         add(self._from_case(case_state, "verhaeltnis_elternteile", "Eltern",
                             "Meine Elternteile leben und sind miteinander verheiratet oder in eingetragener Lebenspartnerschaft verbunden", "verhaeltnis_elternteile", input_type="select", options=["", "ja", "ja, aber dauernd getrennt lebend", "nein"], pdf_field="Verhältnis Elternteile"))
 
+        # Konkurrierende Leistungen
+        add(
+            self._from_case(
+                case_state,
+                "konkurrierende_anwaerterbezuege",
+                "Konkurrierende Leistungen",
+                (
+                    "Anwärterbezüge oder ähnliche Leistungen "
+                    "aus öffentlichen Mitteln"
+                ),
+                "konkurrierende_anwaerterbezuege",
+                transform=self._yes_no,
+                input_type="select",
+                options=["", "ja", "nein"],
+                required=True,
+                pdf_field=(
+                    "Anwärterbezüge oder ähnliche Leistungen "
+                    "aus öffentlichen Mitteln"
+                ),
+            )
+        )
+
+        add(
+            self._from_case(
+                case_state,
+                "konkurrierende_weiterbildung",
+                "Konkurrierende Leistungen",
+                (
+                    "Leistungen für berufliche Aus- oder Weiterbildung "
+                    "nach SGB II oder SGB III"
+                ),
+                "konkurrierende_weiterbildung",
+                transform=self._yes_no,
+                input_type="select",
+                options=["", "ja", "nein"],
+                required=True,
+                pdf_field="Leistungen SGB II oder SGB III",
+            )
+        )
+
+        add(
+            self._from_case(
+                case_state,
+                "konkurrierende_begabtenfoerderung",
+                "Konkurrierende Leistungen",
+                "Leistungen von einem Begabtenförderungswerk",
+                "konkurrierende_begabtenfoerderung",
+                transform=self._yes_no,
+                input_type="select",
+                options=["", "ja", "nein"],
+                required=True,
+                pdf_field="Leistungen Begabtenförderungswerk",
+            )
+        )
+
+        add(
+            self._from_case(
+                case_state,
+                "konkurrierende_keine",
+                "Konkurrierende Leistungen",
+                "Keine der vorstehenden Leistungen",
+                "konkurrierende_keine",
+                transform=self._yes_no,
+                input_type="select",
+                options=["", "ja", "nein"],
+                required=True,
+                pdf_field="nein, keine der vorstehenden Leistungen",
+            )
+        )
+
         # Einkommen und Vermögen
         add(self._from_case(case_state, "eigenes_einkommen", "Einkommen", "Voraussichtliche Einnahmen im Bewilligungszeitraum", "eigenes_einkommen", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, pdf_field="voraussichtliche Einnahmen"))
         add(self._from_profile(user_profile, "bewilligungszeitraum_von", "Einkommen", "Bewilligungszeitraum von (MM.YYYY)", "bewilligungszeitraum_von", required=True, pdf_field="Bewilligungszeitraum von"))

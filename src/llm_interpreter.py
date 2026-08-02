@@ -29,6 +29,27 @@ CASE_FIELD_ALLOWED_VALUES: dict[str, list[str]] = {
     "pflegeversicherung_selbst_beitragspflichtig": ["ja", "nein", "unklar"],
     "eigenes_einkommen": ["ja", "nein", "unklar"],
     "vermoegen_unter_grenze": ["ja", "nein", "unklar"],
+
+    "konkurrierende_anwaerterbezuege": [
+        "ja",
+        "nein",
+        "unklar",
+    ],
+    "konkurrierende_weiterbildung": [
+        "ja",
+        "nein",
+        "unklar",
+    ],
+    "konkurrierende_begabtenfoerderung": [
+        "ja",
+        "nein",
+        "unklar",
+    ],
+    "konkurrierende_keine": [
+        "ja",
+        "nein",
+        "unklar",
+    ],
 }
 
 PROFILE_FIELDS = {"geburtsdatum"}
@@ -138,66 +159,140 @@ def validate_result(result: dict[str, Any], current_step: dict) -> tuple[bool, s
                 "nein" if insurance == "familienversichert" else "ja"
             )
 
+    # Konkurrierende Leistung
+    if current_step.get("key") == "konkurrierende_leistungen":
+        benefit_fields = {
+            "konkurrierende_anwaerterbezuege",
+            "konkurrierende_weiterbildung",
+            "konkurrierende_begabtenfoerderung",
+            "konkurrierende_keine",
+        }
+
+        if set(case_updates) != benefit_fields:
+            return (
+                False,
+                "Die Angaben zu den konkurrierenden Leistungen "
+                "wurden nicht vollständig erkannt.",
+            )
+
+        first_three = [
+            "konkurrierende_anwaerterbezuege",
+            "konkurrierende_weiterbildung",
+            "konkurrierende_begabtenfoerderung",
+        ]
+
+        if case_updates["konkurrierende_keine"] == "ja":
+            if any(
+                    case_updates[field_name] != "nein"
+                    for field_name in first_three
+            ):
+                return (
+                    False,
+                    "„Keine der genannten Leistungen“ kann nicht "
+                    "gleichzeitig mit einer anderen Leistung gewählt werden.",
+                )
+
+        elif not any(
+                case_updates[field_name] == "ja"
+                for field_name in first_three
+        ):
+            return (
+                False,
+                "Es wurde weder eine konkrete Leistung noch "
+                "„keine der genannten Leistungen“ gewählt.",
+            )
+
     return True, ""
 
 
 def build_step_rules(current_key: str, question_text: str) -> str:
     rules = {
         "geburtsdatum": """
-- Extrahiere das Geburtsdatum und normalisiere es als TT.MM.JJJJ.
-- Speichere es in profile_updates.geburtsdatum.
-""",
-        "vollzeitausbildung": """
-- Vollzeitstudium oder reguläres Vollzeitstudium => vollzeitausbildung = ja.
-- Teilzeitstudium, berufsbegleitend oder ausdrücklich nicht Vollzeit => vollzeitausbildung = nein.
-""",
-        "wohnsituation_und_eigentum": """
-- Die Frage enthält zwei mögliche Angaben.
-- Wohnen bei Eltern/einem Elternteil => wohnsituation = bei_eltern und wohnraum_eigentum_eltern = nicht_relevant.
-- Eigene Wohnung, WG, Wohnheim, bei Verwandten oder andere Wohnung außerhalb des Elternhaushalts => wohnsituation = nicht_bei_eltern.
-- Onkel, Tante, Großeltern, Geschwister und andere Verwandte sind in diesem Feld nicht die Eltern.
-- Beispiel: „Das Haus gehört meinem Onkel und meine Eltern leben nicht mit mir“ => wohnsituation = nicht_bei_eltern und wohnraum_eigentum_eltern = nein.
-- Wenn der Nutzer zusätzlich sagt, dass der Wohnraum den Eltern gehört => wohnraum_eigentum_eltern = ja.
-- Wenn er sagt, dass die Wohnung einem Vermieter, ihm selbst, einem Onkel/einer Tante oder einer anderen Person gehört => wohnraum_eigentum_eltern = nein.
-- Frage nicht erneut, ob der Onkel ein anderer Verwandter ist; diese Unterscheidung ist für das Zielfeld irrelevant.
-- Sagt er nur „nein“ zur ersten Teilfrage, frage gezielt nach dem Eigentum des Wohnraums und speichere noch nichts.
-""",
-        "familienstand": """
-- ledig => ledig
-- verheiratet/eingetragene Lebenspartnerschaft => verheiratet
-- dauernd getrennt => dauernd_getrennt
-- verwitwet => verwitwet
-- geschieden/aufgehoben => geschieden
-""",
-        "kinder": """
-- Eigene Kinder vorhanden => kinder = ja.
-- Keine eigenen Kinder => kinder = nein.
-""",
-        "kranken_pflegeversicherung": """
-- „über meine Eltern“, „familienversichert“ => krankenversicherung = familienversichert; pflegeversicherung_selbst_beitragspflichtig = nein.
-- „studentisch versichert“, „studentische Krankenversicherung“ => krankenversicherung = studentisch_gesetzlich; pflegeversicherung_selbst_beitragspflichtig = ja.
-- „freiwillig gesetzlich“ => krankenversicherung = freiwillig_gesetzlich; pflegeversicherung_selbst_beitragspflichtig = ja.
-- „privat“ => krankenversicherung = privat; pflegeversicherung_selbst_beitragspflichtig = ja.
-- Eine sonstige konkrete Versicherungsform => krankenversicherung = anders.
-- Wenn unklar ist, welche Art gemeint ist, stelle eine Rückfrage und wiederhole kurz die Antwortmöglichkeiten.
-""",
-        "eigenes_einkommen": """
-- Minijob, Werkstudentenjob, Beschäftigung, Praktikumsvergütung, Rente oder andere Einnahmen => eigenes_einkommen = ja.
-- Ausdrücklich kein eigenes Einkommen im Bewilligungszeitraum => eigenes_einkommen = nein.
-- Eine bloße Frage danach, was Einkommen oder der Bewilligungszeitraum ist, darf nicht gespeichert werden.
-- Der Bewilligungszeitraum ist der Zeitraum, für den die Person BAföG beantragt.
-- Sind bewilligungszeitraum_von und bewilligungszeitraum_bis im Nutzerprofil bekannt, nenne genau diese Werte.
-- Sind sie nicht bekannt, erkläre den Begriff ohne konkrete Beispieljahre als aktuelle Nutzerdaten darzustellen und weise darauf hin, dass Beginn und Ende später angegeben werden.
-""",
-        "vermoegen_unter_grenze": f"""
-- Interpretiere die konkrete altersabhängige Grenze aus der aktuellen Frage: {question_text}
-- Liegt das genannte Vermögen unter der dort genannten Grenze => vermoegen_unter_grenze = ja.
-- Liegt es darüber => vermoegen_unter_grenze = nein.
-- Wenn der Nutzer keine klare Aussage macht, frage nach.
-""",
+    - Extrahiere das Geburtsdatum und normalisiere es als TT.MM.JJJJ.
+    - Speichere es in profile_updates.geburtsdatum.
+    """,
+            "vollzeitausbildung": """
+    - Vollzeitstudium oder reguläres Vollzeitstudium => vollzeitausbildung = ja.
+    - Teilzeitstudium, berufsbegleitend oder ausdrücklich nicht Vollzeit => vollzeitausbildung = nein.
+    """,
+            "wohnsituation_und_eigentum": """
+    - Die Frage enthält zwei mögliche Angaben.
+    - Wohnen bei Eltern/einem Elternteil => wohnsituation = bei_eltern und wohnraum_eigentum_eltern = nicht_relevant.
+    - Eigene Wohnung, WG, Wohnheim, bei Verwandten oder andere Wohnung außerhalb des Elternhaushalts => wohnsituation = nicht_bei_eltern.
+    - Onkel, Tante, Großeltern, Geschwister und andere Verwandte sind in diesem Feld nicht die Eltern.
+    - Beispiel: „Das Haus gehört meinem Onkel und meine Eltern leben nicht mit mir“ => wohnsituation = nicht_bei_eltern und wohnraum_eigentum_eltern = nein.
+    - Wenn der Nutzer zusätzlich sagt, dass der Wohnraum den Eltern gehört => wohnraum_eigentum_eltern = ja.
+    - Wenn er sagt, dass die Wohnung einem Vermieter, ihm selbst, einem Onkel/einer Tante oder einer anderen Person gehört => wohnraum_eigentum_eltern = nein.
+    - Frage nicht erneut, ob der Onkel ein anderer Verwandter ist; diese Unterscheidung ist für das Zielfeld irrelevant.
+    - Sagt er nur „nein“ zur ersten Teilfrage, frage gezielt nach dem Eigentum des Wohnraums und speichere noch nichts.
+    """,
+            "familienstand": """
+    - ledig => ledig
+    - verheiratet/eingetragene Lebenspartnerschaft => verheiratet
+    - dauernd getrennt => dauernd_getrennt
+    - verwitwet => verwitwet
+    - geschieden/aufgehoben => geschieden
+    """,
+            "kinder": """
+    - Eigene Kinder vorhanden => kinder = ja.
+    - Keine eigenen Kinder => kinder = nein.
+    """,
+            "kranken_pflegeversicherung": """
+    - „über meine Eltern“, „familienversichert“ => krankenversicherung = familienversichert; pflegeversicherung_selbst_beitragspflichtig = nein.
+    - „studentisch versichert“, „studentische Krankenversicherung“ => krankenversicherung = studentisch_gesetzlich; pflegeversicherung_selbst_beitragspflichtig = ja.
+    - „freiwillig gesetzlich“ => krankenversicherung = freiwillig_gesetzlich; pflegeversicherung_selbst_beitragspflichtig = ja.
+    - „privat“ => krankenversicherung = privat; pflegeversicherung_selbst_beitragspflichtig = ja.
+    - Eine sonstige konkrete Versicherungsform => krankenversicherung = anders.
+    - Wenn unklar ist, welche Art gemeint ist, stelle eine Rückfrage und wiederhole kurz die Antwortmöglichkeiten.
+    """,
+            "eigenes_einkommen": """
+    - Minijob, Werkstudentenjob, Beschäftigung, Praktikumsvergütung, Rente oder andere Einnahmen => eigenes_einkommen = ja.
+    - Ausdrücklich kein eigenes Einkommen im Bewilligungszeitraum => eigenes_einkommen = nein.
+    - Eine bloße Frage danach, was Einkommen oder der Bewilligungszeitraum ist, darf nicht gespeichert werden.
+    - Der Bewilligungszeitraum ist der Zeitraum, für den die Person BAföG beantragt.
+    - Sind bewilligungszeitraum_von und bewilligungszeitraum_bis im Nutzerprofil bekannt, nenne genau diese Werte.
+    - Sind sie nicht bekannt, erkläre den Begriff ohne konkrete Beispieljahre als aktuelle Nutzerdaten darzustellen und weise darauf hin, dass Beginn und Ende später angegeben werden.
+    """,
+            "vermoegen_unter_grenze": f"""
+    - Interpretiere die konkrete altersabhängige Grenze aus der aktuellen Frage: {question_text}
+    - Liegt das genannte Vermögen unter der dort genannten Grenze => vermoegen_unter_grenze = ja.
+    - Liegt es darüber => vermoegen_unter_grenze = nein.
+    - Wenn der Nutzer keine klare Aussage macht, frage nach.
+    """,
+
+        "konkurrierende_leistungen": """
+    - Gib beim Speichern immer alle vier Zielfelder zurück.
+
+    - Keine der genannten Leistungen:
+      konkurrierende_anwaerterbezuege = nein
+      konkurrierende_weiterbildung = nein
+      konkurrierende_begabtenfoerderung = nein
+      konkurrierende_keine = ja
+
+    - Anwärterbezüge, Beamtenanwärterbezüge oder ähnliche Leistungen
+      aus öffentlichen Mitteln:
+      konkurrierende_anwaerterbezuege = ja
+
+    - Bildungsgutschein oder andere Leistungen für eine berufliche
+      Aus- oder Weiterbildung nach SGB II oder SGB III:
+      konkurrierende_weiterbildung = ja
+
+    - Stipendium oder Förderung durch ein Begabtenförderungswerk:
+      konkurrierende_begabtenfoerderung = ja
+
+    - Wenn mindestens eine der ersten drei Leistungen zutrifft:
+      konkurrierende_keine = nein.
+
+    - Mehrere der ersten drei Felder dürfen gleichzeitig den Wert ja haben.
+
+    - BAföG-Zahlungen selbst zählen bei dieser Frage nicht als
+      konkurrierende Leistung.
+
+    - Wenn die Aussage nicht eindeutig ist, speichere nichts und stelle
+      genau eine Rückfrage.
+    """,
     }
     return rules.get(current_key, "")
-
 
 def interpret_adaptive_application_message(
     client,
