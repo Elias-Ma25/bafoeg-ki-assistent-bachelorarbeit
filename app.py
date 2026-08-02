@@ -4,6 +4,7 @@ import html
 import re
 from datetime import date
 from typing import Any
+from src.ui_styles import UiStyles
 
 import markdown
 import streamlit as st
@@ -41,9 +42,10 @@ from src.rag_pipeline import build_vectorstore, get_relevant_context
 
 st.set_page_config(
     page_title="BAföG KI-Assistent",
-    page_icon="📄",
+    page_icon="🎓",
     layout="wide",
 )
+UiStyles.apply()
 
 # ---------------------------------------------------------------------------
 # Zugangsschutz für die gesamte Anwendung
@@ -255,6 +257,8 @@ def initialize_state() -> None:
         "manual_form_values": {},
         "form_saved": False,
         "mock_submission_done": False,
+        "show_pdf_check_warning": True,
+        "show_asset_limit_info": True,
         "edit_mode": False,
         "form_edit_version": 0,
         "editing_section": "",
@@ -270,6 +274,54 @@ def initialize_state() -> None:
 
 
 initialize_state()
+
+# ---------------------------
+# Hinweise schließen
+# ---------------------------
+def render_dismissible_notice(
+    message: str,
+    notice_type: str,
+    state_key: str,
+    button_key: str,
+) -> None:
+    """Zeigt einen Hinweis an, der manuell geschlossen werden kann."""
+
+    if not st.session_state.get(
+        state_key,
+        True,
+    ):
+        return
+
+    message_column, close_column = st.columns(
+        [0.96, 0.04]
+    )
+
+    with message_column:
+        if notice_type == "warning":
+            st.warning(message)
+
+        elif notice_type == "info":
+            st.info(message)
+
+        elif notice_type == "success":
+            st.success(message)
+
+        else:
+            st.write(message)
+
+    with close_column:
+        close_clicked = st.button(
+            "✕",
+            key=button_key,
+            help="Hinweis schließen",
+            use_container_width=True,
+        )
+
+    if close_clicked:
+        st.session_state[state_key] = False
+        st.rerun()
+
+
 
 # ---------------------------------------------------------------------------
 # Chatdarstellung
@@ -1477,14 +1529,15 @@ def reset_application() -> None:
     st.session_state["manual_form_values"] = {}
 
     st.session_state["form_saved"] = False
+    st.session_state["mock_submission_done"] = False
+    st.session_state["show_pdf_check_warning"] = True
+    st.session_state["show_asset_limit_info"] = True
     st.session_state["edit_mode"] = False
     st.session_state["form_edit_version"] = 0
     st.session_state["editing_section"] = ""
     st.session_state["section_edit_version"] = 0
     st.session_state["same_as_main_address"] = False
-
     st.session_state["data_conflicts"] = []
-
     st.session_state["current_step_key"] = ""
     st.session_state["last_prompted_step"] = ""
     st.session_state["adaptive_hint_shown"] = False
@@ -3079,23 +3132,34 @@ confirm_clicked = st.button(
 )
 
 if confirm_clicked:
+    was_already_saved = st.session_state.get(
+        "form_saved",
+        False,
+    )
+
     st.session_state["form_saved"] = True
-    st.session_state["mock_submission_done"] = False
     st.session_state["assistant_mode"] = "confirmed"
 
-    append_chat(
-        "assistant",
-        (
-            "Alle unterstützten Pflichtangaben wurden kontrolliert und "
-            "bestätigt. Formblatt 1 kann jetzt als PDF vorausgefüllt werden."
-        ),
-    )
+    # Nur bei einer neuen Bestätigung zurücksetzen.
+    if not was_already_saved:
+        st.session_state["mock_submission_done"] = False
+        st.session_state["show_pdf_check_warning"] = True
+        st.session_state["show_asset_limit_info"] = True
+
+        append_chat(
+            "assistant",
+            (
+                "Alle unterstützten Pflichtangaben wurden kontrolliert "
+                "und bestätigt. Formblatt 1 kann jetzt als PDF "
+                "vorausgefüllt werden."
+            ),
+        )
 
     st.success("Angaben wurden bestätigt.")
     st.rerun()
 
 # ---------------------------------------------------------------------------
-# PDF-Erstellung
+# PDF-Erstellung und Antrag senden
 # ---------------------------------------------------------------------------
 confirmed_draft = form_manager.build_draft(
     user_profile=st.session_state["user_profile"],
@@ -3111,68 +3175,111 @@ confirmed_draft = form_manager.build_draft(
 
 if st.session_state["form_saved"]:
     try:
-        pdf_bytes = pdf_filler.fill(FORM_TEMPLATE, confirmed_draft)
+        pdf_bytes = pdf_filler.fill(
+            FORM_TEMPLATE,
+            confirmed_draft,
+        )
 
         download_column, submit_column = st.columns(2)
 
         with download_column:
             st.download_button(
-                "Formblatt 1 als PDF vorausfüllen",
+                "Antrag herunterladen",
                 data=pdf_bytes,
                 file_name="Formblatt_1_vorausgefuellt.pdf",
                 mime="application/pdf",
                 use_container_width=True,
+                key="download_formblatt1",
+                type="secondary",
             )
+
+        submission_done = st.session_state.get(
+            "mock_submission_done",
+            False,
+        )
 
         with submit_column:
             submit_application_clicked = st.button(
-                "Antrag senden",
-                type="primary",
+                (
+                    "Sendevorgang abgeschlossen"
+                    if submission_done
+                    else "Antrag senden"
+                ),
+                type="secondary",
                 use_container_width=True,
                 key="submit_application_prototype",
+                disabled=submission_done,
             )
 
+        # --------------------------------------------------------
+        # Simulierter Sendevorgang
+        # --------------------------------------------------------
         if submit_application_clicked:
             st.session_state["mock_submission_done"] = True
 
-            append_chat(
-                "assistant",
-                (
-                    "Vielen Dank. Der simulierte Sendevorgang wurde abgeschlossen. "
-                    "Da es sich um einen Prototyp handelt, wurde der Antrag nicht "
-                    "an ein BAföG-Amt übermittelt."
-                ),
+            # Beide Hinweise nach dem Senden automatisch ausblenden.
+            st.session_state["show_pdf_check_warning"] = False
+            st.session_state["show_asset_limit_info"] = False
+
+            st.rerun()
+
+        # --------------------------------------------------------
+        # Anzeige nach dem simulierten Senden
+        # --------------------------------------------------------
+        if st.session_state.get(
+            "mock_submission_done",
+            False,
+        ):
+            st.success(
+                "Vielen Dank! Der simulierte Sendevorgang wurde "
+                "erfolgreich abgeschlossen."
             )
 
-            if st.session_state.get(
-                    "mock_submission_done",
-                    False,
-            ):
-                st.success(
-                    "Vielen Dank! Der simulierte Sendevorgang wurde erfolgreich abgeschlossen."
-                )
+            st.info(
+                "Wichtiger Hinweis: Diese Anwendung ist ein Prototyp "
+                "im Rahmen einer Bachelorarbeit. Der Antrag wurde "
+                "nicht an ein BAföG-Amt, BAföG Digital oder eine "
+                "andere Behörde übermittelt. Es wurden keine "
+                "Unterlagen tatsächlich eingereicht."
+            )
 
-                st.info(
-                    "Wichtiger Hinweis: Diese Anwendung ist ein Prototyp im Rahmen "
-                    "einer Bachelorarbeit. Der Antrag wurde nicht an ein BAföG-Amt, "
-                    "BAföG Digital oder eine andere Behörde übermittelt. Es wurden "
-                    "keine Unterlagen tatsächlich eingereicht."
-                )
+        # --------------------------------------------------------
+        # Hinweise vor dem Senden – einzeln schließbar
+        # --------------------------------------------------------
+        else:
+            render_dismissible_notice(
+                message=(
+                    "Die PDF-Vorlage muss vor der Einreichung "
+                    "vollständig kontrolliert werden. Nicht "
+                    "unterstützte oder offene Felder bleiben leer."
+                ),
+                notice_type="warning",
+                state_key="show_pdf_check_warning",
+                button_key="close_pdf_check_warning",
+            )
 
-        st.warning(
-            "Die PDF-Vorlage muss vor der Einreichung vollständig kontrolliert werden. "
-            "Nicht unterstützte oder offene Felder bleiben leer. "
+            render_dismissible_notice(
+                message=(
+                    "Die bereitgestellte Vorlage verwendet bei der "
+                    "Vermögensfrage andere Beträge als die aktuell "
+                    "berücksichtigten Vermögensfreibeträge. Für "
+                    "Auszubildende, die das 30. Lebensjahr noch nicht "
+                    "vollendet haben, werden 15.000 Euro berücksichtigt; "
+                    "ab Vollendung des 30. Lebensjahres 45.000 Euro."
+                ),
+                notice_type="info",
+                state_key="show_asset_limit_info",
+                button_key="close_asset_limit_info",
+            )
+
+    except Exception as exc:
+        st.error(
+            f"PDF konnte nicht erstellt werden: {exc}"
         )
-        st.info(
-            "Die bereitgestellte Vorlage enthält bei der Vermögensfrage ältere Grenzbeträge."
-            "neues Gesetz für Auszubildende, die das 30. Lebensjahr noch nicht vollendet haben, 15 000 Euro, "
-            "und für Auszubildende, die das 30. Lebensjahr vollendet haben, 45 000 Euro"
-        )
 
-    except Exception as exc:  # noqa: BLE001
-        st.error(f"PDF konnte nicht erstellt werden: {exc}")
 else:
     st.info(
-        "Aktiviere zuerst „Bearbeiten“ und speichere die kontrollierten "
-        "Angaben. Danach wird die PDF-Schaltfläche freigeschaltet."
+        "Speichere und bestätige zuerst die kontrollierten Angaben. "
+        "Danach werden die Schaltflächen zum Herunterladen und "
+        "simulierten Senden freigeschaltet."
     )
