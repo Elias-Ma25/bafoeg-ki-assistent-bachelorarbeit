@@ -5,7 +5,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 # Lädt die lokale .env-Datei.
 load_dotenv()
 

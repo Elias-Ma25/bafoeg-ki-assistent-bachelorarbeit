@@ -114,7 +114,6 @@ def require_app_access() -> None:
     # Verhindert, dass der restliche Anwendungscode ausgeführt wird.
     st.stop()
 
-
 require_app_access()
 
 # Kleine runde Hilfeschaltfläche neben „Schnellauswahl“.
@@ -322,8 +321,6 @@ def render_dismissible_notice(
         st.session_state[state_key] = False
         st.rerun()
 
-
-
 # ---------------------------------------------------------------------------
 # Chatdarstellung
 # ---------------------------------------------------------------------------
@@ -331,7 +328,6 @@ def append_chat(role: str, content: str) -> None:
     st.session_state["chat_history"].append(
         {"role": role, "content": content}
     )
-
 
 def render_chat_history(chat_history: list[dict[str, str]]) -> str:
     """Erzeugt die HTML-Ausgabe für den Chatverlauf."""
@@ -476,8 +472,6 @@ def build_process_card() -> str:
 </body>
 </html>
 """
-
-
 # ---------------------------------------------------------------------------
 # Datenvergleich, Konflikte und Quellenpriorität
 # ---------------------------------------------------------------------------
@@ -657,7 +651,6 @@ def normalize_comparison_value(field_name: str, value: str) -> str:
 
     return re.sub(r"[^a-z0-9äöü]+", "", text)
 
-
 def values_are_equivalent(
     field_name: str,
     first_value: str,
@@ -667,7 +660,6 @@ def values_are_equivalent(
     second_normalized = normalize_comparison_value(field_name, second_value)
 
     return bool(first_normalized) and first_normalized == second_normalized
-
 
 def build_conflict_key(
     field_name: str,
@@ -680,9 +672,7 @@ def build_conflict_key(
             normalize_comparison_value(field_name, new_value),
         ]
     )
-
     return f"{field_name}|{normalized_values[0]}|{normalized_values[1]}"
-
 
 def add_unique_data_conflict(
     field_name: str,
@@ -779,7 +769,6 @@ def save_metadata_value(
         "confidence": confidence,
     }
 
-
 # ---------------------------------------------------------------------------
 # Dokumentverarbeitung
 # ---------------------------------------------------------------------------
@@ -850,7 +839,6 @@ def filter_document_warnings(
 
     return valid_warnings
 
-
 def apply_document_result(result: dict[str, Any]) -> None:
     document_type = result["document_type"]
     filename = result["filename"]
@@ -905,7 +893,6 @@ def apply_document_result(result: dict[str, Any]) -> None:
         | set(result.get("case_updates", {}))
     )
 
-
 def process_uploaded_files(uploaded_files) -> bool:
     if not uploaded_files:
         return False
@@ -950,11 +937,7 @@ def process_uploaded_files(uploaded_files) -> bool:
     ["studienbescheinigung"]
             .get("uploaded") is True
     ):
-        # Nach jedem neu analysierten Dokument prüfen,
-        # ob sich die nächste offene Frage geändert hat.
-        #
-        # last_prompted_step wird hier bewusst NICHT geleert.
-        # Dadurch wird dieselbe Frage nicht mehrfach angezeigt.
+
         move_to_next_application_step(
             force_message=(
                     st.session_state["assistant_mode"]
@@ -1014,7 +997,6 @@ def answer_general_question(question: str) -> str:
     )
 
     return response.choices[0].message.content
-
 
 def build_adaptive_question_message(step: dict) -> str:
     include_hint = not st.session_state.get(
@@ -1828,7 +1810,6 @@ def calculate_section_progress(
         "filled": filled,
     }
 
-
 def get_section_status(
     section_progress: dict[str, Any],
 ) -> dict[str, str]:
@@ -1861,7 +1842,6 @@ def get_section_status(
         "foreground": "#991b1b",
         "border": "#fca5a5",
     }
-
 
 def render_section_status_badge(
     section_progress: dict[str, Any],
@@ -1956,7 +1936,6 @@ MAIN_TO_TRAINING_ADDRESS_FIELDS = {
     "anschrift_ort": "ausbildung_ort",
 }
 
-
 def copy_main_address_to_training_address(
     main_values: dict[str, str] | None = None,
 ) -> bool:
@@ -2003,12 +1982,10 @@ def copy_main_address_to_training_address(
 
     return changed
 
-
 def sync_training_address_checkbox() -> None:
     """Callback für „Gleich wie ständiger Wohnsitz“."""
     if st.session_state.get("same_as_main_address") is True:
         copy_main_address_to_training_address()
-
 
 def render_categorized_form_preview(draft: dict) -> None:
     sections = group_draft_by_section(draft)
@@ -2875,25 +2852,6 @@ with right_col:
             "Studienbescheinigung nach § 9 BAföG "
             "oder Formblatt 02"
         )
-
-        # st.markdown(
-        #     "**Optional zur automatischen Übernahme "
-        #     "weiterer Angaben**"
-        # )
-        #
-        # st.write(
-        #     "Personalausweis/Reisepass, Lebenslauf, "
-        #     "Kranken- und Pflegeversicherungsbescheinigung, "
-        #     "Wohnungsnachweis, Einkommensnachweis "
-        #     "oder Leistungsnachweis"
-        # )
-
-        # st.caption(
-        #     "Du kannst optionale Dokumente freiwillig hochladen. "
-        #     "Alternativ fragt der Assistent fehlende Angaben später ab. "
-        #     "Nutze für Tests möglichst synthetische oder "
-        #     "anonymisierte Dokumente."
-        # )
 
         uploader_version = st.session_state[
             "uploader_version"
