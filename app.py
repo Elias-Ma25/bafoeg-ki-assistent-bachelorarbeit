@@ -3101,17 +3101,11 @@ with left_col:
 # ---------------------------------------------------------------------------
 with right_col:
 
-    # Im freien Beratungschat keine Dokumente anzeigen.
     if not application_mode_active:
         st.subheader("📄 BAföG-Erstantrag")
 
         with st.container(border=True):
             st.markdown("### Antragsassistent starten")
-
-            # st.write(
-            #     "Im freien Chat kannst du allgemeine Fragen zur "
-            #     "BAföG-Erstantragstellung stellen."
-            # )
 
             st.write(
                 "Starte den Antragsassistenten, um Nachweise hochzuladen, "
@@ -3161,8 +3155,6 @@ with right_col:
         )
 
         if remove_documents_clicked:
-            # Alten Antragsdialog ebenfalls entfernen,
-            # damit keine Fragen aus dem alten Fall stehen bleiben.
             st.session_state["chat_history"] = []
 
             reset_application()
@@ -3237,8 +3229,6 @@ with right_col:
                             for warning in item.get("warnings", []):
                                 st.warning(warning)
 
-# Im freien Beratungsmodus keine Antragsdaten,
-# Checkliste oder Formblatt-Vorschau anzeigen.
 if not application_mode_active:
     st.stop()
 
