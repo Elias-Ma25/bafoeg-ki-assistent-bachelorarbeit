@@ -116,36 +116,6 @@ def require_app_access() -> None:
 
 require_app_access()
 
-# Kleine runde Hilfeschaltfläche neben „Schnellauswahl“.
-# Die CSS-Regel ist auf den Container mit dem Schlüssel
-# hybrid_help_button begrenzt und verändert keine anderen Schaltflächen.
-st.markdown(
-    """
-    <style>
-    .st-key-hybrid_help_button button {
-        width: 2.15rem !important;
-        min-width: 2.15rem !important;
-        height: 2.15rem !important;
-        min-height: 2.15rem !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-weight: 700 !important;
-        line-height: 1 !important;
-    }
-
-    .st-key-hybrid_help_button button p {
-        margin: 0 !important;
-        font-size: 1rem !important;
-        line-height: 1 !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 flow_manager = ApplicationFlowManager()
 checklist_manager = ChecklistManager()
@@ -153,14 +123,11 @@ form_manager = Formblatt1Manager()
 document_processor = DocumentProcessor(client=client, model=OPENAI_MODEL)
 pdf_filler = PdfFormFiller()
 
-
-
 # ---------------------------------------------------------------------------
 # Session State
 # ---------------------------------------------------------------------------
 def empty_field() -> dict[str, str]:
     return {"value": "", "source": "", "confidence": ""}
-
 
 def initial_profile() -> dict[str, dict[str, str]]:
     profile = {key: empty_field() for key in PROFILE_KEYS}
@@ -182,7 +149,6 @@ def initial_profile() -> dict[str, dict[str, str]]:
     }
 
     return profile
-
 
 def initial_case_state() -> dict[str, dict[str, str]]:
     state = {
@@ -230,7 +196,6 @@ def initial_case_state() -> dict[str, dict[str, str]]:
 
     return state
 
-
 def initial_document_registry() -> dict[str, dict[str, Any]]:
     return {
         document_type: {
@@ -243,7 +208,6 @@ def initial_document_registry() -> dict[str, dict[str, Any]]:
         }
         for document_type in DOCUMENT_TYPES
     }
-
 
 def initialize_state() -> None:
     defaults = {
@@ -1095,7 +1059,10 @@ def render_hybrid_answer_controls() -> None:
         st.session_state["user_profile"],
     )
 
-    title_col, help_col = st.columns([0.91, 0.09])
+    title_col, help_col = st.columns(
+        [0.64, 0.36],
+        vertical_alignment="center",
+    )
 
     with title_col:
         st.markdown("**Schnellauswahl**")
@@ -1103,13 +1070,19 @@ def render_hybrid_answer_controls() -> None:
     with help_col:
         with st.container(key="hybrid_help_button"):
             explain_clicked = st.button(
-                "?",
+                "💡 Frage erklären",
                 key=(
-                    "explain_current_step_"
-                    + st.session_state.get("current_step_key", "")
+                        "explain_current_step_"
+                        + st.session_state.get(
+                    "current_step_key",
+                    "",
+                )
                 ),
-                help="Frage erklären",
-                use_container_width=False,
+                help=(
+                    "Erhalte eine verständliche Erklärung "
+                    "zur aktuellen Frage."
+                ),
+                use_container_width=True,
             )
 
     if (

@@ -146,6 +146,95 @@ class UiStyles:
                 color: #ffffff !important;
                 fill: #ffffff !important;
             }
+              
+            /* ---------------------------------------------------------
+               Frage erklären – Magenta, ohne Schatten
+               --------------------------------------------------------- */
+            
+            .st-key-hybrid_help_button {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+            }
+            
+            .st-key-hybrid_help_button button {
+                width: 100% !important;
+                min-height: 2.65rem !important;
+                padding: 0.55rem 1rem !important;
+            
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 0.4rem !important;
+            
+                background:
+                    linear-gradient(
+                        135deg,
+                        #d81b60 0%,
+                        #ad1457 100%
+                    ) !important;
+            
+                border: 1px solid #ad1457 !important;
+                border-radius: 10px !important;
+            
+                color: #ffffff !important;
+                font-size: 0.9rem !important;
+                font-weight: 650 !important;
+                line-height: 1.2 !important;
+            
+                box-shadow: none !important;
+            
+                transition:
+                    background 0.16s ease,
+                    border-color 0.16s ease
+                    !important;
+            }
+            
+            .st-key-hybrid_help_button button:hover {
+                background:
+                    linear-gradient(
+                        135deg,
+                        #c2185b 0%,
+                        #880e4f 100%
+                    ) !important;
+            
+                border-color: #880e4f !important;
+                color: #ffffff !important;
+            
+                transform: none !important;
+                box-shadow: none !important;
+            }
+            
+            .st-key-hybrid_help_button button:active {
+                background: #880e4f !important;
+                border-color: #880e4f !important;
+            
+                transform: none !important;
+                box-shadow: none !important;
+            }
+            
+            .st-key-hybrid_help_button button:focus {
+                outline:
+                    3px solid rgba(236, 72, 153, 0.22)
+                    !important;
+            
+                outline-offset: 2px !important;
+                box-shadow: none !important;
+            }
+            
+            .st-key-hybrid_help_button button p,
+            .st-key-hybrid_help_button button span,
+            .st-key-hybrid_help_button button svg {
+                margin: 0 !important;
+            
+                color: #ffffff !important;
+                fill: #ffffff !important;
+            
+                font-size: 0.9rem !important;
+                font-weight: 650 !important;
+                line-height: 1.2 !important;
+                white-space: nowrap !important;
+            }
 
 
             /* ---------------------------------------------------------
