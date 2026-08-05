@@ -370,76 +370,49 @@ def render_chat_history(chat_history: list[dict[str, str]]) -> str:
     return "".join(message_parts)
 
 def build_process_card() -> str:
-    """Zeigt den aktuellen Arbeitsmodus oberhalb des Chatfensters an."""
-    assistant_mode = st.session_state.get("assistant_mode", "beratung")
+    """Zeigt nur den aktuell gewählten Hauptmodus an."""
+
+    assistant_mode = st.session_state.get(
+        "assistant_mode",
+        "beratung",
+    )
 
     if assistant_mode == "beratung":
         mode_title = "Freie BAföG-Beratung"
         mode_icon = "💬"
-        description = (
-            "Du kannst allgemeine Fragen zur BAföG stellen."
-        )
-    elif assistant_mode == "initial_documents":
-        mode_title = "BAföG-Erstantrag"
-        mode_icon = "📄"
-        description = (
-            "Bitte lade zuerst deine Studienbescheinigung nach § 9 BAföG "
-            "oder Formblatt 02 hoch."
-        )
-    elif assistant_mode == "adaptive_questions":
-        mode_title = "BAföG-Erstantrag"
-        mode_icon = "📄"
-        description = (
-            "Der Assistent ergänzt mit dir nur die Angaben, die nicht aus "
-            "deinen Dokumenten erkannt wurden."
-        )
-    elif assistant_mode == "review":
-        mode_title = "BAföG-Erstantrag"
-        mode_icon = "🧾"
-        description = (
-            "Kontrolliere die erkannten Angaben und ergänze noch fehlende "
-            "Formularfelder."
-        )
-    elif assistant_mode == "confirmed":
-        mode_title = "BAföG-Erstantrag"
-        mode_icon = "✅"
-        description = (
-            "Die bestätigten Angaben können jetzt für Formblatt 1 verwendet werden."
-        )
     else:
         mode_title = "BAföG-Erstantrag"
         mode_icon = "📄"
-        description = "Der BAföG-Erstantrag wird vorbereitet."
 
     return f"""
 <!DOCTYPE html>
 <html lang="de">
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:transparent;">
+<head>
+    <meta charset="UTF-8">
+</head>
+
+<body style="
+    margin:0;
+    padding:0;
+    background:transparent;
+">
     <div style="
         background:#ffffff;
         border:1px solid #e5e7eb;
         border-radius:14px;
-        padding:10px 14px;
+        padding:13px 15px;
         box-shadow:0 2px 8px rgba(0,0,0,0.04);
         font-family:Arial,sans-serif;
         box-sizing:border-box;
+        display:flex;
+        align-items:center;
+        gap:8px;
+        font-size:15px;
+        font-weight:700;
+        color:#1f2937;
     ">
-        <div style="
-            display:flex;
-            align-items:center;
-            gap:7px;
-            font-size:15px;
-            font-weight:700;
-            color:#1f2937;
-            margin-bottom:7px;
-        ">
-            <span>{mode_icon}</span>
-            <span>Aktueller Modus: {mode_title}</span>
-        </div>
-        <div style="font-size:13px;line-height:1.45;color:#4b5563;">
-            {description}
-        </div>
+        <span>{mode_icon}</span>
+        <span>Aktueller Modus: {mode_title}</span>
     </div>
 </body>
 </html>
@@ -1818,27 +1791,16 @@ def start_application_callback() -> None:
     append_chat(
             "assistant",
             (
-                "Wir beginnen dokumentenbasiert. Bitte lade zuerst deine "
+                "Bitte lade zuerst deine "
                 "**Studienbescheinigung nach § 9 BAföG oder Formblatt 02** hoch.\n\n"
                 "Optional kannst du gleichzeitig weitere Dokumente hochladen, "
                 "damit ich möglichst viele Angaben automatisch übernehme:\n"
                 "- Personalausweis oder Reisepass\n"
                 "- Lebenslauf\n"
                 "- Bescheinigung über Kranken- und Pflegeversicherung\n"
-                "- Wohnungsnachweis\n"
-                "- Einkommensnachweis\n\n"
-                "Nach der Analyse frage ich automatisch nur noch die Angaben ab, "
-                "die nicht aus deinen Dokumenten erkannt wurden."
+                "- Wohnungsnachweis\n\n"
             ),
         )
-
-# ---------------------------------------------------------------------------
-# Checkliste
-# ---------------------------------------------------------------------------
-
-
-
-
 
 # ---------------------------------------------------------------------------
 # Formblatt-Vorschau
@@ -2627,7 +2589,7 @@ def render_categorized_form_preview(draft: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Abmelden und aktuelle Sitzungsdaten löschen
+# Abmelden und Sitzungsdaten löschen
 # ---------------------------------------------------------------------------
 if "logout_confirmation_visible" not in st.session_state:
     st.session_state["logout_confirmation_visible"] = False
@@ -2668,15 +2630,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 with st.container(key="top_logout_bar"):
     spacer_col, logout_col = st.columns(
-        [0.68, 0.32]
+        [1, 0.25]
     )
 
     with logout_col:
         logout_clicked = st.button(
-            "🚪 Abmelden und Sitzungsdaten löschen",
+            "🚪 Abmelden",
             key="show_logout_confirmation",
             use_container_width=True,
         )
@@ -2909,94 +2870,103 @@ application_mode_active = (
 with left_col:
     st.subheader("💬 Chatbot")
 
-    components.html(
-        build_process_card(),
-        height=88,
-        scrolling=False,
-    )
+    with st.container(key="chat_area"):
+        components.html(
+            build_process_card(),
+            height=50,
+            scrolling=False,
+        )
 
-    chat_history = st.session_state["chat_history"]
+        chat_history = st.session_state["chat_history"]
 
-    chat_html = render_chat_history(
-        chat_history
-    )
+        chat_html = render_chat_history(
+            chat_history
+        )
 
-    chat_container_height = (
-        320
-        if not chat_history
-        else 480
-    )
+        chat_container_height = (
+            320
+            if not chat_history
+            else 480
+        )
 
-    empty_chat_html = """
-        <div style="
-            height:100%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#9ca3af;
-            font-family:Arial,sans-serif;
-            text-align:center;
-            box-sizing:border-box;
-        ">
-            Noch keine Nachrichten vorhanden.
-        </div>
-    """
+        empty_chat_html = """
+            <div style="
+                height:100%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color:#9ca3af;
+                font-family:Arial,sans-serif;
+                text-align:center;
+                box-sizing:border-box;
+            ">
+                Noch keine Nachrichten vorhanden.
+            </div>
+        """
 
-    components.html(
-        f"""
-        <div id="chat-container" style="
-            height:{chat_container_height}px;
-            overflow-y:auto;
-            border:1px solid #e5e7eb;
-            border-radius:16px;
-            padding:14px;
-            background:#ffffff;
-            box-sizing:border-box;
-            scroll-behavior:smooth;
-        ">
-            {chat_html if chat_html else empty_chat_html}
-        </div>
+        components.html(
+            f"""
+            <div id="chat-container" style="
+                height:{chat_container_height}px;
+                overflow-y:auto;
+                border:1px solid #e5e7eb;
+                border-radius:16px;
+                padding:14px;
+                background:#ffffff;
+                box-sizing:border-box;
+                scroll-behavior:smooth;
+            ">
+                {chat_html if chat_html else empty_chat_html}
+            </div>
+    
+                <script>
+                    const chatContainer =
+                        document.getElementById("chat-container");
+    
+                    if (chatContainer) {{
+                        setTimeout(() => {{
+                            chatContainer.scrollTop =
+                                chatContainer.scrollHeight;
+                        }}, 50);
+                    }}
+                </script>
+                """,
+                height=chat_container_height + 10,
+                scrolling=False,
+            )
 
-        <script>
-            const chatContainer = document.getElementById("chat-container");
+        chat_input_version = st.session_state[
+            "chat_input_version"
+        ]
 
-            if (chatContainer) {{
-                setTimeout(() => {{
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }}, 50);
-            }}
-        </script>
-        """,
-        height=chat_container_height + 10,
-        scrolling=False,
-    )
+        render_hybrid_answer_controls()
 
-    chat_input_version = st.session_state[
-        "chat_input_version"
-    ]
-
-    render_hybrid_answer_controls()
-
-    user_message = st.text_area(
-        "Nachricht",
-        placeholder=(
-            "Stelle eine allgemeine BAföG-Frage oder antworte frei "
-            "auf die aktuelle Frage."
-        ),
-        height=140,
-        key=f"chat_input_text_{chat_input_version}",
-    )
+    with st.container(key="chat_message_input"):
+        user_message = st.text_area(
+            "Nachricht",
+                placeholder=(
+                    "Stelle eine allgemeine BAföG-Frage oder antworte "
+                    "frei auf die aktuelle Frage."
+                ),
+                height=125,
+                key=(
+                    f"chat_input_text_"
+                    f"{chat_input_version}"
+                ),
+            )
 
     btn_send, btn_clear = st.columns(2)
 
     send_clicked = btn_send.button(
         "Nachricht senden",
         use_container_width=True,
+        key="send_chat_message_button",
     )
 
     clear_clicked = btn_clear.button(
         "Chat und Antrag löschen",
         use_container_width=True,
+        key="clear_chat_application_button",
     )
 
     if clear_clicked:

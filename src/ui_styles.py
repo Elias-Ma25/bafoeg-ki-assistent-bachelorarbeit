@@ -236,7 +236,6 @@ class UiStyles:
                 white-space: nowrap !important;
             }
 
-
             /* ---------------------------------------------------------
                Antrag senden – Blau
                --------------------------------------------------------- */
@@ -280,4 +279,116 @@ class UiStyles:
             }
             </style>
             """
+        )
+
+        st.markdown(
+            """
+            <style>
+            /* Nachricht senden: weiß mit grünem Rahmen */
+            .st-key-send_chat_message_button button {
+                background-color: #ffffff !important;
+                border: 2px solid #22c55e !important;
+                color: #15803d !important;
+                font-weight: 600 !important;
+                border-radius: 9px !important;
+                box-shadow: none !important;
+            }
+        
+            .st-key-send_chat_message_button button:hover {
+                background-color: #f0fdf4 !important;
+                border-color: #16a34a !important;
+                color: #166534 !important;
+                box-shadow: none !important;
+            }
+        
+            .st-key-send_chat_message_button button:active {
+                background-color: #dcfce7 !important;
+                border-color: #15803d !important;
+                color: #14532d !important;
+            }
+            
+            /* Chat und Antrag löschen: weiß mit rotem Rahmen */
+            .st-key-clear_chat_application_button button {
+                background-color: #ffffff !important;
+                border: 2px solid #ef4444 !important;
+                color: #dc2626 !important;
+                font-weight: 600 !important;
+                border-radius: 9px !important;
+                box-shadow: none !important;
+            }
+            
+            .st-key-clear_chat_application_button button:hover {
+                background-color: #fef2f2 !important;
+                border-color: #dc2626 !important;
+                color: #b91c1c !important;
+                box-shadow: none !important;
+            }
+            
+            .st-key-clear_chat_application_button button:active {
+                background-color: #fee2e2 !important;
+                border-color: #b91c1c !important;
+                color: #991b1b !important;
+            }
+            
+            .st-key-clear_chat_application_button button:focus-visible {
+                outline: 3px solid rgba(239, 68, 68, 0.22) !important;
+                outline-offset: 2px !important;
+            }
+            
+            /* Abstände innerhalb des Chatbereichs reduzieren */
+            .st-key-chat_area [data-testid="stVerticalBlock"] {
+                gap: 0.55rem !important;
+            }
+            
+            /* Sichtbarer innerer Bereich des Nachrichteneingabefeldes */
+            .st-key-chat_message_input
+            [data-testid="stTextArea"]
+            div:has(> textarea) {
+                background-color: #ffffff !important;
+                border: 1px solid #888888 !important;
+                border-radius: 10px !important;
+                box-shadow: none !important;
+            }
+        
+            /* Zustand beim Anklicken */
+            .st-key-chat_message_input
+            [data-testid="stTextArea"]
+            div:has(> textarea:focus) {
+                border-color: #dc2627 !important;
+                box-shadow: 0 0 0 0px #999999 !important;
+            }
+        
+            /* Textarea selbst ohne eigenen zweiten Rahmen */
+            .st-key-chat_message_input
+            [data-testid="stTextArea"]
+            textarea {
+                background-color: transparent !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+            }
+            /* Einführung bestätigen und ausblenden */
+            .st-key-welcome_understood_button button {
+                background-color: #14b8a6 !important;
+                border: 2px solid #14b8a6 !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                border-radius: 10px !important;
+                box-shadow: none !important;
+            }
+        
+            .st-key-welcome_understood_button button:hover {
+                background-color: #0d9488 !important;
+                border-color: #0d9488 !important;
+                color: #ffffff !important;
+            }
+        
+            .st-key-welcome_understood_button button:active {
+                background-color: #0f766e !important;
+                border-color: #0f766e !important;
+                color: #ffffff !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
         )

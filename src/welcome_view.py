@@ -132,3 +132,20 @@ class WelcomeView:
                 "Bachelorarbeit. Sie ersetzt keine rechtsverbindliche "
                 "Beratung."
             )
+
+            # Einführung bestätigen und ausblenden
+            left_space, button_column, right_space = st.columns(
+                [1, 0.65, 1]
+            )
+
+            with button_column:
+                with st.container(
+                        key="welcome_understood_button",
+                ):
+                    st.button(
+                        "Verstanden",
+                        key="confirm_welcome_intro",
+                        use_container_width=True,
+                        on_click=cls._set_visible,
+                        args=(False,),
+                    )
