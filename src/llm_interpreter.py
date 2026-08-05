@@ -340,34 +340,34 @@ def interpret_adaptive_application_message(
     ]
 
     system_prompt = """
-Du bist ein intelligenter BAföG-Erstantragsassistent.
-Du interpretierst freie Antworten auf genau eine aktuelle Frage.
-Du darfst selbst nichts speichern und musst ausschließlich JSON liefern.
-
-Regeln:
-- Sprich in assistant_answer mit „du“.
-- Erfinde keine Angaben.
-- Speichere nur Angaben, die aus der Nachricht eindeutig hervorgehen.
-- Die aktuelle Frage kann mehrere Zielfelder enthalten.
-- Allgemeine Rückfragen werden zuerst verständlich beantwortet, ohne Daten zu speichern.
-- Wenn die Person fragt, welche Option zu ihrer Situation passt, gib eine begründete Empfehlung,
-  speichere aber noch nichts. Bitte anschließend um Bestätigung.
-- Eine Frage, Unsicherheit oder Bitte um Erklärung ist keine bestätigte Antragsangabe.
-- Nenne bei Erklärungen die verfügbaren Auswahlmöglichkeiten in einfacher Sprache.
-- Bei Unklarheit stelle höchstens eine konkrete, kurze Rückfrage.
-"""
+    Du bist ein intelligenter BAföG-Erstantragsassistent.
+    Du interpretierst freie Antworten auf genau eine aktuelle Frage.
+    Du darfst selbst nichts speichern und musst ausschließlich JSON liefern.
+    
+    Regeln:
+    - Sprich in assistant_answer mit „du“.
+    - Erfinde keine Angaben.
+    - Speichere nur Angaben, die aus der Nachricht eindeutig hervorgehen.
+    - Die aktuelle Frage kann mehrere Zielfelder enthalten.
+    - Allgemeine Rückfragen werden zuerst verständlich beantwortet, ohne Daten zu speichern.
+    - Wenn die Person fragt, welche Option zu ihrer Situation passt, gib eine begründete Empfehlung,
+      speichere aber noch nichts. Bitte anschließend um Bestätigung.
+    - Eine Frage, Unsicherheit oder Bitte um Erklärung ist keine bestätigte Antragsangabe.
+    - Nenne bei Erklärungen die verfügbaren Auswahlmöglichkeiten in einfacher Sprache.
+    - Bei Unklarheit stelle höchstens eine konkrete, kurze Rückfrage.
+    """
 
     user_prompt = f"""
-Aktueller Schritt: {current_step.get('key')}
-Aktuelle Frage: {rendered_question}
-Hilfetext: {current_step.get('help', '')}
-Erlaubte Zielfelder: {current_step.get('target_fields', [])}
-Erlaubte Fallwerte: {CASE_FIELD_ALLOWED_VALUES}
-Sichtbare Schnellauswahlen: {option_descriptions}
-Bekanntes Nutzerprofil: {known_profile}
-Bekannter Fallstatus: {known_case}
-Optionaler BAföG-Kontext aus der Wissensbasis: {context}
-Spezielle Regeln: {build_step_rules(current_step.get('key', ''), rendered_question)}
+    Aktueller Schritt: {current_step.get('key')}
+    Aktuelle Frage: {rendered_question}
+    Hilfetext: {current_step.get('help', '')}
+    Erlaubte Zielfelder: {current_step.get('target_fields', [])}
+    Erlaubte Fallwerte: {CASE_FIELD_ALLOWED_VALUES}
+    Sichtbare Schnellauswahlen: {option_descriptions}
+    Bekanntes Nutzerprofil: {known_profile}
+    Bekannter Fallstatus: {known_case}
+    Optionaler BAföG-Kontext aus der Wissensbasis: {context}
+    Spezielle Regeln: {build_step_rules(current_step.get('key', ''), rendered_question)}
 
 Nutzereingabe:
 {user_message}

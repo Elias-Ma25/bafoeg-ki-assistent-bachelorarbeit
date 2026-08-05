@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-
+import shutil
 import os
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
@@ -21,19 +21,48 @@ def load_knowledge_documents(folder_path: str):
             documents.extend(PyPDFLoader(file_path).load())
     return documents
 
-def build_vectorstore(folder_path: str, persist_directory: str = "chroma_db"):
-    documents = load_knowledge_documents(folder_path)
-    if not documents:
-        raise ValueError("Im Wissensordner wurden keine TXT- oder PDF-Dokumente gefunden.")
+def build_vectorstore(
+    folder_path: str,
+    persist_directory: str = "chroma_db",
+):
+    knowledge_path = Path(folder_path).resolve()
+    vectorstore_path = Path(persist_directory).resolve()
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-    split_docs = splitter.split_documents(documents)
+    documents = load_knowledge_documents(
+        str(knowledge_path)
+    )
+
+    if not documents:
+        raise ValueError(
+            "Im Wissensordner wurden keine TXT- "
+            "oder PDF-Dokumente gefunden."
+        )
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=100,
+    )
+
+    split_docs = splitter.split_documents(
+        documents
+    )
+
+    # Bestehenden Store vollständig entfernen.
+    # Dadurch bleiben keine alten oder doppelten Chunks zurück.
+    if vectorstore_path.exists():
+        shutil.rmtree(
+            vectorstore_path
+        )
+
     embeddings = OpenAIEmbeddings()
-    return Chroma.from_documents(
+
+    vectorstore = Chroma.from_documents(
         documents=split_docs,
         embedding=embeddings,
-        persist_directory=persist_directory,
+        persist_directory=str(vectorstore_path),
     )
+
+    return vectorstore
 
 def load_vectorstore(persist_directory: str = "chroma_db"):
     embeddings = OpenAIEmbeddings()
