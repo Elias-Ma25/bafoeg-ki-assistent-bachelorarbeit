@@ -935,13 +935,51 @@ def get_context(question: str) -> str:
             "abgefragt werden."
         ) from exc
 
+# --- NEU HINZUFÜGEN: Diese Funktion repariert Suchanfragen für die Datenbank ---
+def rewrite_search_query(user_question: str, chat_history: list) -> str:
+    """Formuliert Rückfragen mithilfe des Chatverlaufs zu einer eigenständigen Suchanfrage um."""
+    if not chat_history or client is None:
+        return user_question
+
+    recent_history = chat_history[-4:]
+    history_text = "\n".join([f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}" for msg in recent_history])
+
+    rewrite_prompt = (
+        "Du bist ein Such-Assistent. Deine Aufgabe ist es, "
+        "die neueste Nutzerfrage basierend auf dem Chatverlauf so umzuformulieren, "
+        "dass sie als eigenständige Suchanfrage für eine Datenbank funktioniert.\n\n"
+        "Ersetze unklare Bezüge (wie 'er', 'sie', 'die', 'diese Gründe') "
+        "durch die konkreten Fachbegriffe aus dem Chatverlauf (z.B. 'BAföG Leistungsnachweis wichtige Gründe'). "
+        "Wenn die Frage bereits klar ist, gib sie unverändert zurück.\n\n"
+        f"Chatverlauf:\n{history_text}\n\n"
+        f"Neueste Frage: {user_question}\n\n"
+        "Antworte AUSSCHLIESSLICH mit der umformulierten Suchanfrage."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "user", "content": rewrite_prompt}],
+            temperature=0,
+            max_tokens=100,
+        )
+        return str(response.choices[0].message.content).strip()
+    except Exception:
+        return user_question
+
 
 def answer_general_question(question: str) -> str:
     if client is None:
         return "Kein OpenAI API-Key gefunden."
 
-    # RAG-Kontext für die AKTUELLE Frage holen
-    context = get_context(question)
+    # 1. Bisherigen Chatverlauf laden (alles außer die allerneueste Eingabe)
+    chat_history = st.session_state.get("chat_history", [])[:-1]
+
+    # 2. NEU: Frage mithilfe des Verlaufs umformulieren!
+    search_query = rewrite_search_query(question, chat_history)
+
+    # 3. RAG-Kontext mit der UMFORMULIERTEN Frage holen (nicht mehr mit 'question')
+    context = get_context(search_query)
 
     # Dynamisches Datum für zeitliche Einordnungen (WICHTIG für BAföG-Sätze!)
     current_date = date.today().strftime("%d.%m.%Y")
@@ -1021,16 +1059,12 @@ def answer_general_question(question: str) -> str:
         }
     ]
 
-    # Bisherigen Chatverlauf aus dem Session State laden (alles außer die allerneueste Eingabe)
-    chat_history = st.session_state.get("chat_history", [])[:-1]
-
     for msg in chat_history:
         messages.append({
             "role": msg.get("role"),
             "content": msg.get("content")
         })
 
-    # Aktuelle Frage inkl. RAG-Kontext als letzte Nachricht anhängen
     messages.append({
         "role": "user",
         "content": (
@@ -2887,7 +2921,6 @@ with left_col:
         chat_history
     )
 
-    # Bei einem leeren Chat kompakter darstellen.
     chat_container_height = (
         320
         if not chat_history
@@ -2950,7 +2983,7 @@ with left_col:
             "Stelle eine allgemeine BAföG-Frage oder antworte frei "
             "auf die aktuelle Frage."
         ),
-        height=100,
+        height=140,
         key=f"chat_input_text_{chat_input_version}",
     )
 
