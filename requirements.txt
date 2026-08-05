@@ -1,4 +1,5 @@
-streamlit==1.60.0
+Streamlit 1.60.0
+Starlette 0.52.1
 openai
 langchain
 langchain-openai
