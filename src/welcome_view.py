@@ -78,8 +78,6 @@ class WelcomeView:
                 Hier erhältst du Unterstützung bei allgemeinen
                 BAföG-Fragen und bei der prototypischen Vorbereitung
                 eines BAföG-Erstantrags.
-
-                Du kannst zwischen zwei Nutzungsmodi wählen:
                 """
             )
 
@@ -130,7 +128,7 @@ class WelcomeView:
             st.info(
                 "Diese Anwendung ist ein Prototyp im Rahmen einer "
                 "Bachelorarbeit. Sie ersetzt keine rechtsverbindliche "
-                "Beratung."
+                "Beratung. Der Antrag wird nicht an ein BAföG-Amt oder eine andere Behörde übermittelt. "
             )
 
             # Einführung bestätigen und ausblenden
@@ -143,7 +141,7 @@ class WelcomeView:
                         key="welcome_understood_button",
                 ):
                     st.button(
-                        "Verstanden",
+                        "Weiter",
                         key="confirm_welcome_intro",
                         use_container_width=True,
                         on_click=cls._set_visible,

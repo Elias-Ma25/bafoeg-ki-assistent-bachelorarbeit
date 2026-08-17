@@ -67,11 +67,6 @@ def require_app_access() -> None:
 
     st.title("🔒 Geschützter BAföG-Nutzertest")
 
-    st.write(
-        "Dieser Prototyp ist ausschließlich für eingeladene "
-        "Testpersonen im Rahmen einer Bachelorarbeit vorgesehen."
-    )
-
     with st.form("app_access_form"):
         entered_password = st.text_input(
             "Zugangskennwort",
@@ -2441,152 +2436,393 @@ def render_categorized_form_preview(draft: dict) -> None:
                 st.rerun()
 
 
+
             elif save_section:
+
+                # --------------------------------------------------------
+
+                # Aktuelle manuelle Werte zuerst laden
+
+                # --------------------------------------------------------
+
+                merged_values = dict(
+
+                    st.session_state.get(
+
+                        "manual_form_values",
+
+                        {},
+
+                    )
+
+                )
+
+                # Aktuell bearbeitete Werte übernehmen
+
+                merged_values.update(
+
+                    {
+
+                        field_id: str(value).strip()
+
+                        for field_id, value in edited_values.items()
+
+                    }
+
+                )
+
+                # --------------------------------------------------------
+
+                # Konkurrierende Leistungen konsistent halten
+
+                # --------------------------------------------------------
+
                 competing_fields = [
+
                     "konkurrierende_anwaerterbezuege",
+
                     "konkurrierende_weiterbildung",
+
                     "konkurrierende_begabtenfoerderung",
+
                     "konkurrierende_keine",
+
                 ]
 
                 if any(
+
                         field_name in edited_values
+
                         for field_name in competing_fields
+
                 ):
+
                     competing_values = {
+
                         field_name: str(
-                            edited_values.get(
+
+                            merged_values.get(
+
                                 field_name,
-                                merged_values.get(field_name, ""),
+
+                                "",
+
                             )
+
                         ).strip().lower()
+
                         for field_name in competing_fields
+
                     }
 
                     first_three = competing_fields[:3]
 
-                    if competing_values["konkurrierende_keine"] == "ja":
+                    # Wenn "keine der genannten Leistungen" gewählt wurde,
+
+                    # müssen alle drei konkreten Leistungen = nein sein.
+
+                    if (
+
+                            competing_values[
+
+                                "konkurrierende_keine"
+
+                            ]
+
+                            == "ja"
+
+                    ):
+
                         for field_name in first_three:
                             competing_values[field_name] = "nein"
 
+
+                    # Sobald mindestens eine konkrete Leistung = ja ist,
+
+                    # muss "keine" = nein sein.
+
                     elif any(
+
                             competing_values[field_name] == "ja"
+
                             for field_name in first_three
+
                     ):
-                        competing_values["konkurrierende_keine"] = "nein"
+
+                        competing_values[
+
+                            "konkurrierende_keine"
+
+                        ] = "nein"
+
+
+                    # Wenn alle drei konkreten Leistungen = nein sind,
+
+                    # wird automatisch "keine" = ja gesetzt.
 
                     elif all(
-                            competing_values[field_name] == "nein"
-                            for field_name in first_three
-                    ):
-                        competing_values["konkurrierende_keine"] = "ja"
 
-                    for field_name, selected_value in competing_values.items():
-                        st.session_state["case_state"][field_name] = {
+                            competing_values[field_name] == "nein"
+
+                            for field_name in first_three
+
+                    ):
+
+                        competing_values[
+
+                            "konkurrierende_keine"
+
+                        ] = "ja"
+
+                    # Normalisierte Werte sowohl im Case-State
+
+                    # als auch in den manuellen Formularwerten speichern.
+
+                    for (
+
+                            field_name,
+
+                            selected_value,
+
+                    ) in competing_values.items():
+                        st.session_state[
+
+                            "case_state"
+
+                        ][field_name] = {
+
                             "value": selected_value,
+
                             "source": "user_confirmed",
+
                             "confidence": "high",
+
                         }
 
-                        merged_values[field_name] = selected_value
+                        merged_values[
 
-                    st.session_state["manual_form_values"] = merged_values
+                            field_name
 
-                merged_values = dict(
-                    st.session_state.get(
-                        "manual_form_values",
-                        {},
-                    )
-                )
-                merged_values.update(
-                    {
-                        field_id: str(value).strip()
-                        for field_id, value in edited_values.items()
-                    }
-                )
+                        ] = selected_value
 
-                st.session_state["manual_form_values"] = merged_values
+                # --------------------------------------------------------
+
+                # Manuelle Formularwerte endgültig speichern
+
+                # --------------------------------------------------------
+
+                st.session_state[
+
+                    "manual_form_values"
+
+                ] = merged_values
+
                 sync_financial_form_values_to_case_state(
+
                     edited_values
+
                 )
+
+                # --------------------------------------------------------
+
+                # Bescheidempfänger synchronisieren
+
+                # --------------------------------------------------------
 
                 if "bescheid_empfaenger" in edited_values:
                     selected_recipient = str(
-                        edited_values["bescheid_empfaenger"]
+
+                        edited_values[
+
+                            "bescheid_empfaenger"
+
+                        ]
+
                     ).strip()
 
-                    st.session_state["case_state"]["bescheid_empfaenger"] = {
+                    st.session_state[
+
+                        "case_state"
+
+                    ]["bescheid_empfaenger"] = {
+
                         "value": selected_recipient,
+
                         "source": "user_confirmed",
+
                         "confidence": "high",
+
                     }
 
-                # Wohnsituation mit der dynamischen Checkliste synchronisieren.
+                # --------------------------------------------------------
+
+                # Wohnsituation synchronisieren
+
+                # --------------------------------------------------------
+
                 if "wohnsituation" in edited_values:
+
                     selected_living_value = str(
-                        edited_values["wohnsituation"]
+
+                        edited_values[
+
+                            "wohnsituation"
+
+                        ]
+
                     ).strip().lower()
 
                     living_value_map = {
+
                         "ja": "bei_eltern",
+
                         "nein": "nicht_bei_eltern",
+
                         "": "",
+
                     }
 
-                    normalized_living_value = living_value_map.get(
-                        selected_living_value,
-                        selected_living_value,
+                    normalized_living_value = (
+
+                        living_value_map.get(
+
+                            selected_living_value,
+
+                            selected_living_value,
+
+                        )
+
                     )
 
-                    st.session_state["case_state"]["wohnsituation"] = {
+                    st.session_state[
+
+                        "case_state"
+
+                    ]["wohnsituation"] = {
+
                         "value": normalized_living_value,
+
                         "source": "user_confirmed",
+
                         "confidence": "high",
+
                     }
 
-                    # Beim Wohnen mit den Eltern ist die Eigentumsfrage
-                    # für diesen Schritt nicht mehr relevant.
+                    # Beim Wohnen mit den Eltern ist die
+
+                    # Eigentumsfrage nicht relevant.
+
                     if normalized_living_value == "bei_eltern":
-                        st.session_state["case_state"][
+                        st.session_state[
+
+                            "case_state"
+
+                        ][
+
                             "wohnraum_eigentum_eltern"
+
                         ] = {
+
                             "value": "nicht_relevant",
+
                             "source": "user_confirmed",
+
                             "confidence": "high",
+
                         }
 
-                        merged_values["wohnraum_eigentum_eltern"] = ""
-                        st.session_state["manual_form_values"] = merged_values
+                        merged_values[
 
-                # Eigentumsangabe synchronisieren, wenn nicht bei den Eltern gewohnt wird.
-                if (
-                        "wohnraum_eigentum_eltern" in edited_values
-                        and st.session_state["case_state"]
-                        .get("wohnsituation", {})
-                        .get("value") == "nicht_bei_eltern"
-                ):
-                    selected_ownership_value = str(
-                        edited_values["wohnraum_eigentum_eltern"]
-                    ).strip().lower()
-
-                    if selected_ownership_value in {"ja", "nein"}:
-                        st.session_state["case_state"][
                             "wohnraum_eigentum_eltern"
-                        ] = {
-                            "value": selected_ownership_value,
-                            "source": "user_confirmed",
-                            "confidence": "high",
-                        }
 
-                st.session_state["editing_section"] = ""
-                st.session_state["form_saved"] = False
+                        ] = ""
 
-                st.toast(
-                    f"Kategorie „{section}“ wurde gespeichert."
+                        st.session_state[
+
+                            "manual_form_values"
+
+                        ] = merged_values
+
+                # --------------------------------------------------------
+
+                # Eigentumsangabe synchronisieren
+
+                # --------------------------------------------------------
+
+                if (
+
+                        "wohnraum_eigentum_eltern"
+
+                        in edited_values
+
+                        and st.session_state[
+
+                    "case_state"
+
+                ]
+
+                        .get(
+
+                    "wohnsituation",
+
+                    {},
+
                 )
 
-                st.rerun()
+                        .get("value")
 
+                        == "nicht_bei_eltern"
+
+                ):
+
+                    selected_ownership_value = str(
+
+                        edited_values[
+
+                            "wohnraum_eigentum_eltern"
+
+                        ]
+
+                    ).strip().lower()
+
+                    if selected_ownership_value in {
+
+                        "ja",
+
+                        "nein",
+
+                    }:
+                        st.session_state[
+
+                            "case_state"
+
+                        ][
+
+                            "wohnraum_eigentum_eltern"
+
+                        ] = {
+
+                            "value": selected_ownership_value,
+
+                            "source": "user_confirmed",
+
+                            "confidence": "high",
+
+                        }
+
+                # --------------------------------------------------------
+
+                # Bearbeitungsmodus schließen
+
+                # --------------------------------------------------------
+
+                st.session_state["editing_section"] = ""
+
+                st.session_state["form_saved"] = False
+
+                st.toast(f"Kategorie „{section}“ wurde gespeichert.")
+
+                st.rerun()
 
 # ---------------------------------------------------------------------------
 # Abmelden und Sitzungsdaten löschen
