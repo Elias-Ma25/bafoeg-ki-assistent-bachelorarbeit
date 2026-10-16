@@ -56,7 +56,8 @@ PROFILE_FIELDS = {"geburtsdatum"}
 
 
 def create_fallback_result(message: str = "") -> dict[str, Any]:
-    text = message or "Ich bin mir nicht sicher, wie ich deine Antwort einordnen soll. Kannst du sie bitte genauer formulieren?"
+    text = message or ("Ich bin mir nicht sicher, wie ich deine Antwort einordnen soll. "
+                       "Kannst du sie bitte genauer formulieren?")
     return {
         "intent": "unclear",
         "case_updates": {},
@@ -69,14 +70,12 @@ def create_fallback_result(message: str = "") -> dict[str, Any]:
         "next_action": "ask_followup",
     }
 
-
 def _parse_json(raw: str) -> dict:
     raw = str(raw or "").strip()
     if raw.startswith("```"):
         raw = raw.removeprefix("```json").removeprefix("```")
         raw = raw.removesuffix("```").strip()
     return json.loads(raw)
-
 
 def normalize_result(result: dict[str, Any]) -> dict[str, Any]:
     normalized = create_fallback_result()
@@ -218,11 +217,15 @@ def build_step_rules(current_key: str, question_text: str) -> str:
             "wohnsituation_und_eigentum": """
     - Die Frage enthält zwei mögliche Angaben.
     - Wohnen bei Eltern/einem Elternteil => wohnsituation = bei_eltern und wohnraum_eigentum_eltern = nicht_relevant.
-    - Eigene Wohnung, WG, Wohnheim, bei Verwandten oder andere Wohnung außerhalb des Elternhaushalts => wohnsituation = nicht_bei_eltern.
+    - Eigene Wohnung, WG, Wohnheim, bei Verwandten oder andere Wohnung außerhalb des Elternhaushalts 
+        => wohnsituation = nicht_bei_eltern.
     - Onkel, Tante, Großeltern, Geschwister und andere Verwandte sind in diesem Feld nicht die Eltern.
-    - Beispiel: „Das Haus gehört meinem Onkel und meine Eltern leben nicht mit mir“ => wohnsituation = nicht_bei_eltern und wohnraum_eigentum_eltern = nein.
-    - Wenn der Nutzer zusätzlich sagt, dass der Wohnraum den Eltern gehört => wohnraum_eigentum_eltern = ja.
-    - Wenn er sagt, dass die Wohnung einem Vermieter, ihm selbst, einem Onkel/einer Tante oder einer anderen Person gehört => wohnraum_eigentum_eltern = nein.
+    - Beispiel: „Das Haus gehört meinem Onkel und meine Eltern leben nicht mit mir“ 
+        => wohnsituation = nicht_bei_eltern und wohnraum_eigentum_eltern = nein.
+    - Wenn der Nutzer zusätzlich sagt, dass der Wohnraum den Eltern gehört 
+        => wohnraum_eigentum_eltern = ja.
+    - Wenn er sagt, dass die Wohnung einem Vermieter, ihm selbst, einem Onkel/einer Tante oder einer anderen Person gehört 
+        => wohnraum_eigentum_eltern = nein.
     - Frage nicht erneut, ob der Onkel ein anderer Verwandter ist; diese Unterscheidung ist für das Zielfeld irrelevant.
     - Sagt er nur „nein“ zur ersten Teilfrage, frage gezielt nach dem Eigentum des Wohnraums und speichere noch nichts.
     """,
@@ -238,20 +241,25 @@ def build_step_rules(current_key: str, question_text: str) -> str:
     - Keine eigenen Kinder => kinder = nein.
     """,
             "kranken_pflegeversicherung": """
-    - „über meine Eltern“, „familienversichert“ => krankenversicherung = familienversichert; pflegeversicherung_selbst_beitragspflichtig = nein.
-    - „studentisch versichert“, „studentische Krankenversicherung“ => krankenversicherung = studentisch_gesetzlich; pflegeversicherung_selbst_beitragspflichtig = ja.
-    - „freiwillig gesetzlich“ => krankenversicherung = freiwillig_gesetzlich; pflegeversicherung_selbst_beitragspflichtig = ja.
+    - „über meine Eltern“, „familienversichert“ => krankenversicherung = familienversichert; 
+        pflegeversicherung_selbst_beitragspflichtig = nein.
+    - „studentisch versichert“, „studentische Krankenversicherung“ => krankenversicherung = studentisch_gesetzlich; 
+        pflegeversicherung_selbst_beitragspflichtig = ja.
+    - „freiwillig gesetzlich“ => krankenversicherung = freiwillig_gesetzlich; 
+        pflegeversicherung_selbst_beitragspflichtig = ja.
     - „privat“ => krankenversicherung = privat; pflegeversicherung_selbst_beitragspflichtig = ja.
     - Eine sonstige konkrete Versicherungsform => krankenversicherung = anders.
     - Wenn unklar ist, welche Art gemeint ist, stelle eine Rückfrage und wiederhole kurz die Antwortmöglichkeiten.
     """,
             "eigenes_einkommen": """
-    - Minijob, Werkstudentenjob, Beschäftigung, Praktikumsvergütung, Rente oder andere Einnahmen => eigenes_einkommen = ja.
+    - Minijob, Werkstudentenjob, Beschäftigung, Praktikumsvergütung, Rente oder andere Einnahmen 
+        => eigenes_einkommen = ja.
     - Ausdrücklich kein eigenes Einkommen im Bewilligungszeitraum => eigenes_einkommen = nein.
     - Eine bloße Frage danach, was Einkommen oder der Bewilligungszeitraum ist, darf nicht gespeichert werden.
     - Der Bewilligungszeitraum ist der Zeitraum, für den die Person BAföG beantragt.
     - Sind bewilligungszeitraum_von und bewilligungszeitraum_bis im Nutzerprofil bekannt, nenne genau diese Werte.
-    - Sind sie nicht bekannt, erkläre den Begriff ohne konkrete Beispieljahre als aktuelle Nutzerdaten darzustellen und weise darauf hin, dass Beginn und Ende später angegeben werden.
+    - Sind sie nicht bekannt, erkläre den Begriff ohne konkrete Beispieljahre als aktuelle Nutzerdaten darzustellen 
+        und weise darauf hin, dass Beginn und Ende später angegeben werden.
     """,
             "vermoegen_unter_grenze": f"""
     - Interpretiere die konkrete altersabhängige Grenze aus der aktuellen Frage: {question_text}

@@ -179,14 +179,31 @@ class Formblatt1Manager:
                 pdf_field="Ausbildungsstätte und Ausbildungsort",
             )
         )
-        add(self._from_profile(user_profile, "studiengang", "Ausbildung", "Klasse/Fachrichtung / Studiengang", "studiengang", required=True, pdf_field="Klasse/Fachrichtung"))
-        add(self._from_profile(user_profile, "abschlussziel", "Ausbildung", "Angestrebter Abschluss", "abschlussziel", required=True, pdf_field="angestrebter Abschluss"))
-        add(self._from_case(case_state, "vollzeitausbildung", "Ausbildung", "Vollzeitausbildung", "vollzeitausbildung", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, pdf_field="Vollzeitausbildung"))
-        add(self._metadata_field("frueherer_bafoeg_antrag", "Ausbildung", "Bereits früher BAföG beantragt", "nein", source="scope_erstantrag", confidence="high", status="systemvorgabe", input_type="select", options=["nein"], required=True, pdf_field="früherer BAföG-Antrag"))
+        add(self._from_profile(user_profile, "studiengang", "Ausbildung",
+                               "Klasse/Fachrichtung / Studiengang", "studiengang",
+                               required=True, pdf_field="Klasse/Fachrichtung"))
+
+        add(self._from_profile(user_profile, "abschlussziel", "Ausbildung",
+                               "Angestrebter Abschluss", "abschlussziel",
+                               required=True, pdf_field="angestrebter Abschluss"))
+
+        add(self._from_case(case_state, "vollzeitausbildung", "Ausbildung",
+                            "Vollzeitausbildung", "vollzeitausbildung",
+                            transform=self._yes_no, input_type="select", options=["", "ja", "nein"],
+                            required=True, pdf_field="Vollzeitausbildung"))
+
+        add(self._metadata_field("frueherer_bafoeg_antrag", "Ausbildung",
+                                 "Bereits früher BAföG beantragt", "nein", source="scope_erstantrag",
+                                 confidence="high", status="systemvorgabe", input_type="select", options=["nein"],
+                                 required=True, pdf_field="früherer BAföG-Antrag"))
 
         # Person
-        add(self._from_profile(user_profile, "nachname", "Person", "Nachname", "nachname", required=True, pdf_field="Name"))
-        add(self._from_profile(user_profile, "vorname", "Person", "Vorname", "vorname", required=True, pdf_field="Vorname"))
+        add(self._from_profile(user_profile, "nachname", "Person", "Nachname",
+                               "nachname", required=True, pdf_field="Name"))
+
+        add(self._from_profile(user_profile, "vorname", "Person", "Vorname",
+                               "vorname", required=True, pdf_field="Vorname"))
+
         geburtsname, geburtsname_source, geburtsname_confidence = self._read(
             user_profile,
             "geburtsname",
@@ -219,9 +236,17 @@ class Formblatt1Manager:
                 ),
             )
         )
-        add(self._from_profile(user_profile, "geburtsdatum", "Person", "Geburtsdatum", "geburtsdatum", required=True, pdf_field="Geburtsdatum"))
-        add(self._from_case(case_state, "familienstand", "Person", "Familienstand", "familienstand", transform=lambda v: self.FAMILY_STATUS_LABELS.get(v, v), input_type="select", options=["", *self.FAMILY_STATUS_LABELS.values()], required=True, pdf_field="Familienstand"))
-        add(self._from_profile(user_profile, "geburtsort", "Person", "Geburtsort", "geburtsort", required=True, pdf_field="Geburtsort"))
+        add(self._from_profile(user_profile, "geburtsdatum", "Person", "Geburtsdatum",
+                               "geburtsdatum", required=True, pdf_field="Geburtsdatum"))
+
+        add(self._from_case(case_state, "familienstand", "Person", "Familienstand",
+                            "familienstand", transform=lambda v: self.FAMILY_STATUS_LABELS.get(v, v),
+                            input_type="select", options=["", *self.FAMILY_STATUS_LABELS.values()], required=True,
+                            pdf_field="Familienstand"))
+
+        add(self._from_profile(user_profile, "geburtsort", "Person", "Geburtsort",
+                               "geburtsort", required=True, pdf_field="Geburtsort"))
+
         gender_value, gender_source, gender_confidence = self._read(user_profile, "geschlecht")
         add(
             self._metadata_field(
@@ -238,8 +263,13 @@ class Formblatt1Manager:
                 pdf_field="Geschlecht",
             )
         )
-        add(self._metadata_field("staatsangehoerigkeit", "Person", "Eigene Staatsangehörigkeit", "deutsch", source="scope_deutsche_antragsteller", confidence="high", status="systemvorgabe", required=True, pdf_field="eigene Staatsangehörigkeit"))
-        add(self._from_case(case_state, "kinder", "Person", "Eigene Kinder", "kinder", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, pdf_field="eigene Kinder"))
+        add(self._metadata_field("staatsangehoerigkeit", "Person", "Eigene Staatsangehörigkeit",
+                                 "deutsch", source="scope_deutsche_antragsteller", confidence="high",
+                                 status="systemvorgabe", required=True, pdf_field="eigene Staatsangehörigkeit"))
+
+        add(self._from_case(case_state, "kinder", "Person", "Eigene Kinder", "kinder",
+                            transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True,
+                            pdf_field="eigene Kinder"))
 
         # Ständiger Wohnsitz
         for field_id, label, profile_key, pdf_field in [
@@ -261,8 +291,15 @@ class Formblatt1Manager:
                 )
             )
 
-        add(self._from_case(case_state, "wohnsituation", "Wohnsituation", "Mit Eltern/einem Elternteil in häuslicher Gemeinschaft", "wohnsituation", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, pdf_field="häusliche Gemeinschaft mit Eltern"))
-        add(self._from_case(case_state, "wohnraum_eigentum_eltern", "Wohnsituation", "Wohnraum im Eigentum/Miteigentum der Eltern", "wohnraum_eigentum_eltern", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], pdf_field="Eigentum/Miteigentum der Eltern"))
+        add(self._from_case(case_state, "wohnsituation", "Wohnsituation",
+                            "Mit Eltern/einem Elternteil in häuslicher Gemeinschaft",
+                            "wohnsituation", transform=self._yes_no, input_type="select",
+                            options=["", "ja", "nein"], required=True, pdf_field="häusliche Gemeinschaft mit Eltern"))
+
+        add(self._from_case(case_state, "wohnraum_eigentum_eltern", "Wohnsituation",
+                            "Wohnraum im Eigentum/Miteigentum der Eltern", "wohnraum_eigentum_eltern",
+                            transform=self._yes_no, input_type="select", options=["", "ja", "nein"],
+                            pdf_field="Eigentum/Miteigentum der Eltern"))
 
         # Anschrift während Ausbildung
         for field_id, label, profile_key, pdf_field in [
@@ -284,8 +321,10 @@ class Formblatt1Manager:
             )
 
         # Kontakt und Bank
-        add(self._from_profile(user_profile, "telefon", "Kontakt und Bank", "Telefon", "telefon", pdf_field="Kontaktdaten Telefon"))
-        add(self._from_profile(user_profile, "email", "Kontakt und Bank", "E-Mail", "email", pdf_field="Kontaktdaten E-Mail"))
+        add(self._from_profile(user_profile, "telefon", "Kontakt und Bank", "Telefon",
+                               "telefon", pdf_field="Kontaktdaten Telefon"))
+        add(self._from_profile(user_profile, "email", "Kontakt und Bank", "E-Mail",
+                               "email", pdf_field="Kontaktdaten E-Mail"))
         add(
             self._from_case(
                 case_state=case_state,
@@ -307,8 +346,13 @@ class Formblatt1Manager:
                 ),
             )
         )
-        add(self._from_profile(user_profile, "iban", "Kontakt und Bank", "IBAN", "iban", required=True, pdf_field="IBAN"))
-        add(self._from_profile(user_profile, "geldinstitut", "Kontakt und Bank", "Name des Geldinstituts", "geldinstitut", required=True, pdf_field="Name Geldistitut"))
+        add(self._from_profile(user_profile, "iban", "Kontakt und Bank", "IBAN",
+                               "iban", required=True, pdf_field="IBAN"))
+
+        add(self._from_profile(user_profile, "geldinstitut", "Kontakt und Bank",
+                               "Name des Geldinstituts", "geldinstitut", required=True,
+                               pdf_field="Name Geldistitut"))
+
         kontoinhaber, kontoinhaber_source, kontoinhaber_confidence = self._read(
             user_profile,
             "kontoinhaber",
@@ -362,9 +406,20 @@ class Formblatt1Manager:
         )
 
         # Versicherung
-        add(self._from_case(case_state, "krankenversicherung", "Kranken- und Pflegeversicherung", "Krankenversicherung", "krankenversicherung", transform=lambda v: self.INSURANCE_LABELS.get(v, v), input_type="select", options=["", *self.INSURANCE_LABELS.values()], required=True, pdf_field="Krankenversicherung"))
-        add(self._from_case(case_state, "pflegeversicherung", "Kranken- und Pflegeversicherung", "Selbst beitragspflichtig pflegeversichert", "pflegeversicherung_selbst_beitragspflichtig", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, pdf_field="Pflegeversicherung"))
-        add(self._from_profile(user_profile, "steuer_id", "Kranken- und Pflegeversicherung", "Steueridentifikationsnummer", "steuer_id", required=True, pdf_field="Steueridentifikationsnummer"))
+        add(self._from_case(case_state, "krankenversicherung", "Kranken- und Pflegeversicherung",
+                            "Krankenversicherung", "krankenversicherung", transform=lambda v:
+            self.INSURANCE_LABELS.get(v, v), input_type="select", options=["", *self.INSURANCE_LABELS.values()],
+                            required=True, pdf_field="Krankenversicherung"))
+
+        add(self._from_case(case_state, "pflegeversicherung", "Kranken- und Pflegeversicherung",
+                            "Selbst beitragspflichtig pflegeversichert",
+                            "pflegeversicherung_selbst_beitragspflichtig", transform=self._yes_no,
+                            input_type="select", options=["", "ja", "nein"], required=True,
+                            pdf_field="Pflegeversicherung"))
+
+        add(self._from_profile(user_profile, "steuer_id", "Kranken- und Pflegeversicherung",
+                               "Steueridentifikationsnummer", "steuer_id", required=True,
+                               pdf_field="Steueridentifikationsnummer"))
 
         # Eltern – bewusst nur Kernfelder als Stichprobe
         for field_id, label, profile_key, pdf_field in [
@@ -373,9 +428,13 @@ class Formblatt1Manager:
             ("elternteil2_nachname", "Nachname 2. Elternteil", "elternteil2_nachname", "Name 2. Elternteil"),
             ("elternteil2_vorname", "Vorname 2. Elternteil", "elternteil2_vorname", "Vorname Name 2. Elternteil"),
         ]:
-            add(self._from_profile(user_profile, field_id, "Eltern", label, profile_key, required=True, pdf_field=pdf_field))
+            add(self._from_profile(user_profile, field_id, "Eltern", label, profile_key,
+                                   required=True, pdf_field=pdf_field))
         add(self._from_case(case_state, "verhaeltnis_elternteile", "Eltern",
-                            "Meine Elternteile leben und sind miteinander verheiratet oder in eingetragener Lebenspartnerschaft verbunden", "verhaeltnis_elternteile", input_type="select", options=["", "ja", "ja, aber dauernd getrennt lebend", "nein"], pdf_field="Verhältnis Elternteile"))
+                            "Meine Elternteile leben und sind miteinander verheiratet oder in eingetragener "
+                            "Lebenspartnerschaft verbunden", "verhaeltnis_elternteile",
+                            input_type="select", options=["", "ja", "ja, aber dauernd getrennt lebend", "nein"],
+                            pdf_field="Verhältnis Elternteile"))
 
         # Konkurrierende Leistungen
         add(
@@ -448,28 +507,25 @@ class Formblatt1Manager:
         )
 
         # Einkommen und Vermögen
-        add(self._from_case(case_state, "eigenes_einkommen", "Einkommen", "Voraussichtliche Einnahmen im Bewilligungszeitraum", "eigenes_einkommen", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, pdf_field="voraussichtliche Einnahmen"))
-        add(self._from_profile(user_profile, "bewilligungszeitraum_von", "Einkommen", "Bewilligungszeitraum von (MM.YYYY)", "bewilligungszeitraum_von", required=True, pdf_field="Bewilligungszeitraum von"))
-        add(self._from_profile(user_profile, "bewilligungszeitraum_bis", "Einkommen", "Bewilligungszeitraum bis (MM.YYYY)", "bewilligungszeitraum_bis", required=True, pdf_field="Bewilligungszeitraum bis"))
-        add(self._from_case(case_state, "vermoegen_unter_grenze", "Vermögen", "Vermögen unter der altersabhängigen Grenze", "vermoegen_unter_grenze", transform=self._yes_no, input_type="select", options=["", "ja", "nein"], required=True, help_text="Dieses Feld wird in der Vorschau genutzt. Die hochgeladene PDF-Vorlage enthält möglicherweise veraltete Grenzbeträge und wird deshalb nicht automatisch dafür angekreuzt."))
+        add(self._from_case(case_state, "eigenes_einkommen", "Einkommen",
+                            "Voraussichtliche Einnahmen im Bewilligungszeitraum",
+                            "eigenes_einkommen", transform=self._yes_no,
+                            input_type="select", options=["", "ja", "nein"],
+                            required=True, pdf_field="voraussichtliche Einnahmen"))
+        add(self._from_profile(user_profile, "bewilligungszeitraum_von", "Einkommen",
+                               "Bewilligungszeitraum von (MM.YYYY)",
+                               "bewilligungszeitraum_von", required=True,
+                               pdf_field="Bewilligungszeitraum von"))
+        add(self._from_profile(user_profile, "bewilligungszeitraum_bis", "Einkommen",
+                               "Bewilligungszeitraum bis (MM.YYYY)", "bewilligungszeitraum_bis",
+                               required=True, pdf_field="Bewilligungszeitraum bis"))
+        add(self._from_case(case_state, "vermoegen_unter_grenze", "Vermögen",
+                            "Vermögen unter der altersabhängigen Grenze",
+                            "vermoegen_unter_grenze", transform=self._yes_no,
+                            input_type="select", options=["", "ja", "nein"], required=True))
 
-        # # Werdegang aus Lebenslauf
-        # for index, entry in enumerate(career_entries[:8], start=1):
-        #     section = "Schulischer und beruflicher Werdegang"
-        #     for suffix, label, value, pdf_field in [
-        #         ("von", f"Station {index}: von", entry.get("von", ""), f"Monat / Jahr von {index}"),
-        #         ("bis", f"Station {index}: bis", entry.get("bis", ""), f"Monat / Jahr bis {index}"),
-        #         ("name_ort", f"Station {index}: Ausbildungsstätte/Arbeitgeber und Ort", entry.get("name_ort", ""), f"Name und Ort {index}"),
-        #         ("art", f"Station {index}: Schulart/Fachrichtung/Tätigkeit", entry.get("art", ""), f"Schulart/Fachrichtung/Tätigkeit {index}"),
-        #         ("abschluss", f"Station {index}: Abschluss/Bruttolohn/Leistung", entry.get("abschluss_leistung", ""), f"Abschluss / Bruttolohn /Leistung {index}"),
-        #     ]:
-        #         add(self._metadata_field(f"werdegang_{index}_{suffix}", section, label, value, source="lebenslauf", confidence="medium", status="übernommen" if value else "offen", pdf_field=pdf_field))
-        #
-        # Schulischer und beruflicher Werdegang
         section = "Schulischer und beruflicher Werdegang"
 
-        # Auch ohne hochgeladenen Lebenslauf wird eine leere Station angelegt.
-        # Dadurch bleibt der Pflichtbereich immer sichtbar.
         entries_for_draft = [
             dict(entry)
             for entry in career_entries[:8]

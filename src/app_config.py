@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-
+import streamlit as st
 from dotenv import load_dotenv
 
 # Lädt die lokale .env-Datei.

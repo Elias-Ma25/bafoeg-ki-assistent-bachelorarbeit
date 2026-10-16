@@ -67,7 +67,8 @@ class ChecklistManager:
                 status="offen",
                 reason=(
                     "Im abgegrenzten Standardfall eines deutschen BAföG-Erstantrags wird Formblatt 3 "
-                    "zunächst als relevant vorgemerkt. Sonderfälle wie elternunabhängige Förderung sind nicht Kern des Prototyps."
+                    "zunächst als relevant vorgemerkt. Sonderfälle wie elternunabhängige Förderung "
+                    "sind nicht Kern des Prototyps."
                 ),
                 source_rule="scope_standard_case",
             ),
@@ -84,7 +85,8 @@ class ChecklistManager:
                 source_rule="semester",
             ),
             "wohnungsnachweis": self.create_item(
-                "Wohnungsnachweis (Wohnungsgeberbescheinigung, Meldebescheinigung oder relevante Mietvertragsseiten)",
+                "Wohnungsnachweis (Wohnungsgeberbescheinigung, "
+                "Meldebescheinigung oder relevante Mietvertragsseiten)",
                 status="nicht_erforderlich",
                 reason="Erforderlich, wenn nicht mit den Eltern in häuslicher Gemeinschaft gewohnt wird.",
                 source_rule="housing",
@@ -111,7 +113,8 @@ class ChecklistManager:
                 "Nachweise zum schulischen und beruflichen Werdegang",
                 status="zu_pruefen",
                 reason=(
-                    "Der Lebenslauf kann den Werdegang vorbereiten. Fehlende Zeiträume oder belegpflichtige Zeiten "
+                    "Der Lebenslauf kann den Werdegang vorbereiten. "
+                    "Fehlende Zeiträume oder belegpflichtige Zeiten "
                     "müssen anschließend geprüft werden."
                 ),
                 source_rule="career_review",

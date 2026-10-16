@@ -430,9 +430,10 @@ class PdfFormFiller:
         writer = PdfWriter()
         writer.clone_document_from_reader(reader)
 
-        # PDF-Viewer sollen die Erscheinungsbilder der Felder neu erzeugen.
-        if writer._root_object.get("/AcroForm") is not None:  # noqa: SLF001 - pypdf benötigt Zugriff auf AcroForm.
-            writer._root_object[NameObject("/AcroForm")][NameObject("/NeedAppearances")] = BooleanObject(True)  # noqa: SLF001
+        if writer._root_object.get("/AcroForm") is not None:
+            # noqa: SLF001 - pypdf benötigt Zugriff auf AcroForm.
+            writer._root_object[NameObject("/AcroForm")][NameObject("/NeedAppearances")] = BooleanObject(True)
+            # noqa: SLF001
 
         pdf_values = self.build_pdf_values(draft)
         for page in writer.pages:
