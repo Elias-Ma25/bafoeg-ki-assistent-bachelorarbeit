@@ -895,7 +895,7 @@ def get_context(question: str) -> str:
         return get_relevant_context(
             question,
             VECTORSTORE_DIR,
-            k=5,
+            k=10,
         )
     except Exception as exc:
         raise RuntimeError(
