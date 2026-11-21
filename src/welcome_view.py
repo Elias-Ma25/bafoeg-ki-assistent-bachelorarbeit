@@ -95,7 +95,7 @@ class WelcomeView:
                     )
 
                     st.write(
-                        "Stelle z.B. allgemeine Fragen zu BAföG, "
+                        "Stelle z. B. allgemeine Fragen zu BAföG, "
                         "Formblättern, Voraussetzungen oder "
                         "benötigten Nachweisen."
                     )
@@ -114,7 +114,7 @@ class WelcomeView:
                     )
 
                     st.write(
-                        "Lade deine dokumente hoch. Der Assistent "
+                        "Lade deine Dokumente hoch. Der Assistent "
                         "übernimmt erkannte Angaben und fragt nur noch "
                         "fehlende Informationen ab."
                     )

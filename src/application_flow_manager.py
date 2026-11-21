@@ -12,8 +12,7 @@ class ApplicationFlowManager:
     noch bereits vom Nutzer bestätigt wurde.
     """
 
-    # Schwellen der vereinfachten Vermögensangabe
-    # im offiziellen Formblatt 1, nicht die gesetzlichen Freibeträge.
+    # Im offiziellen Formblatt 1, nicht die gesetzlichen Freibeträge.
     FORM_ASSET_THRESHOLD_UNDER_30 = 10_000
     FORM_ASSET_THRESHOLD_FROM_30 = 30_000
 

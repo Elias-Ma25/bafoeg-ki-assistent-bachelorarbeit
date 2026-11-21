@@ -11,10 +11,10 @@ def get_hybrid_options(
     step_key: str,
     user_profile: dict | None = None,
 ) -> list[dict[str, Any]]:
-    """Liefert deterministische Schnellauswahlen für den aktuellen Antragsschritt.
+    """Stellt vordefinierte Antwortmöglichkeiten für den aktuellen Antragsschritt bereit.
 
-    Jede Option enthält bereits die kanonischen internen Werte. Ein Klick wird
-    deshalb ohne LLM interpretiert. Freitext bleibt parallel möglich.
+    Die Auswahlwerte können direkt ohne Sprachmodell übernommen werden.
+    Alternativ können Nutzer ihre Antworten frei formulieren.
     """
     user_profile = user_profile or {}
 

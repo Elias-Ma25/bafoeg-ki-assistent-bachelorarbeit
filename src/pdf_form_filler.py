@@ -442,7 +442,7 @@ class PdfFormFiller:
             try:
                 writer.update_page_form_field_values(page, pdf_values, auto_regenerate=False)
             except Exception as exc:  # noqa: BLE001
-                # Seiten ohne Formularfelder werfen je nach pypdf-Version eine Meldung/Exception.
+                # Bei Seiten ohne Formularfelder kann pypdf eine Ausnahme auslösen.
                 if "No fields to update" not in str(exc):
                     raise
 

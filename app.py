@@ -903,7 +903,7 @@ def get_context(question: str) -> str:
             "abgefragt werden."
         ) from exc
 
-# --- NEU HINZUFÜGEN: Diese Funktion repariert Suchanfragen für die Datenbank ---
+# Kontextabhängige Suchanfragen für die RAG-Abfrage umformulieren.
 def rewrite_search_query(user_question: str, chat_history: list) -> str:
     """Formuliert Rückfragen mithilfe des Chatverlaufs zu einer eigenständigen Suchanfrage um."""
     if not chat_history or client is None:
@@ -940,16 +940,16 @@ def answer_general_question(question: str) -> str:
     if client is None:
         return "Kein OpenAI API-Key gefunden."
 
-    # 1. Bisherigen Chatverlauf laden (alles außer die allerneueste Eingabe)
+    # Bisherigen Chatverlauf ohne die aktuelle Nutzereingabe laden.
     chat_history = st.session_state.get("chat_history", [])[:-1]
 
-    # 2. NEU: Frage mithilfe des Verlaufs umformulieren!
+    # Nutzerfrage anhand des bisherigen Chatverlaufs umformulieren.
     search_query = rewrite_search_query(question, chat_history)
 
-    # 3. RAG-Kontext mit der UMFORMULIERTEN Frage holen (nicht mehr mit 'question')
+    # RAG-Kontext anhand der umformulierten Suchanfrage abrufen.
     context = get_context(search_query)
 
-    # Dynamisches Datum für zeitliche Einordnungen (WICHTIG für BAföG-Sätze!)
+    # Aktuelles Datum für die zeitliche Einordnung von BAföG-Auskünften bereitstellen.
     current_date = date.today().strftime("%d.%m.%Y")
 
     messages = [
@@ -1071,11 +1071,10 @@ def build_adaptive_question_message(step: dict) -> str:
     return question
 
 def render_hybrid_answer_controls() -> None:
-    """Zeigt vertikale Schnellauswahlen und eine kompakte Erklärungshilfe.
+    """Zeigt Schnellauswahlen und eine Erklärungshilfe für aktuelle Antragsfragen.
 
-    Auswahlklicks werden deterministisch gespeichert. Freitext bleibt parallel
-    möglich. Die Fragezeichen-Schaltfläche steht klein und rund direkt neben
-    der Überschrift „Schnellauswahl“.
+    Ausgewählte Antworten werden direkt gespeichert.
+    Alternativ können Nutzer ihre Antworten frei formulieren.
     """
     if st.session_state.get("assistant_mode") != "adaptive_questions":
         return
@@ -2425,7 +2424,6 @@ def render_categorized_form_preview(draft: dict) -> None:
                     8,
                 )
 
-                # Kategorie bleibt im Bearbeitungsmodus.
                 st.session_state["section_edit_version"] += 1
                 st.session_state["form_saved"] = False
 
@@ -2457,7 +2455,7 @@ def render_categorized_form_preview(draft: dict) -> None:
 
                 )
 
-                # Aktuell bearbeitete Werte übernehmen
+
 
                 merged_values.update(
 

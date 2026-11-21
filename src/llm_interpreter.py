@@ -226,7 +226,6 @@ def build_step_rules(current_key: str, question_text: str) -> str:
         => wohnraum_eigentum_eltern = ja.
     - Wenn er sagt, dass die Wohnung einem Vermieter, ihm selbst, einem Onkel/einer Tante oder einer anderen Person gehört 
         => wohnraum_eigentum_eltern = nein.
-    - Frage nicht erneut, ob der Onkel ein anderer Verwandter ist; diese Unterscheidung ist für das Zielfeld irrelevant.
     - Sagt er nur „nein“ zur ersten Teilfrage, frage gezielt nach dem Eigentum des Wohnraums und speichere noch nichts.
     """,
             "familienstand": """
@@ -407,7 +406,7 @@ Gib ausschließlich JSON in dieser Struktur zurück:
         )
         parsed = _parse_json(completion.choices[0].message.content)
         return normalize_result(parsed)
-    except Exception as exc:  # noqa: BLE001 - Fehlermeldung wird nutzerfreundlich weitergegeben.
+    except Exception as exc:  # noqa: BLE001 - Fehler bei der Interpretation abfangen.
         return create_fallback_result(f"Ich konnte deine Antwort gerade nicht sicher interpretieren: {exc}")
 
 def explain_application_step(
@@ -421,9 +420,7 @@ def explain_application_step(
     context: str = "",
     mode: str = "explain",
 ) -> str:
-    """Erklärt die aktuelle Formularfrage, ohne Daten zu speichern.
-
-    Erklärt Bedeutung und Auswahlmöglichkeiten der aktuellen Frage.
+    """Erklärt die aktuelle Formularfrage und ihre Auswahlmöglichkeiten, ohne Daten zu speichern.
     """
     available_options = available_options or []
     option_labels = [

@@ -670,7 +670,6 @@ def deterministic_insurance_fallback(
         r"\bkrankenversicherung für studenten\b",
         r"\bkvds\b",
 
-        # Tatsächliche Reihenfolge im extrahierten DAK-Dokument:
         # nach § 5 ... SGB V Krankenversicherung....X
         (
             r"nach\s*§\s*5\s*abs\.?\s*1\s*nr\.?\s*9"
@@ -680,8 +679,6 @@ def deterministic_insurance_fallback(
             r"[.\s:]*x"
         ),
 
-        # Alternative Textreihenfolge bei anderen PDF-Generatoren:
-        # X Krankenversicherung ... nach § 5 ...
         (
             r"x.{0,60}"
             r"krankenversicherung"
@@ -815,8 +812,7 @@ Zeitliche Regeln:
   wenn sein Beginn nach dem heutigen Datum liegt.
 - Ein Zeitraum, dessen Beginn vor dem heutigen Datum liegt,
   darf nicht als zukünftig bezeichnet werden.
-- Beispiel: Wenn heute 25.07.2026 ist, liegt 09/2024 nicht in der Zukunft.
-- Erzeuge keine Warnung nur aufgrund eines vergangenen Praxissemesters.
+-  Erzeuge keine Warnung nur aufgrund eines vergangenen Praxissemesters.
 
 Du analysierst ein Dokument für einen deutschen BAföG-Erstantrag.
 Dateiname: {filename}
@@ -852,10 +848,11 @@ Normalisierung:
 - wohnsituation: bei_eltern | nicht_bei_eltern, nur wenn aus dem Dokument eindeutig
 - wohnraum_eigentum_eltern: ja | nein, nur wenn eindeutig
 - Bei Personalausweis/Reisepass oder Lebenslauf gehören Adressdaten grundsätzlich in anschrift_*.
-- Bei Wohnungsgeberbescheinigung, Meldebescheinigung oder Mietvertrag gehören die erkannte Ausbildungswohnung in ausbildung_*.
+- Bei Wohnungsgeberbescheinigung, Meldebescheinigung oder Mietvertrag gehören die erkannte Ausbildungswohnung 
+    in ausbildung_*.
 - Eine Versicherungsbescheinigung kann krankenversicherung und pflegeversicherung_selbst_beitragspflichtig liefern.
-Regeln für Kranken- und Pflegeversicherungsnachweise:
 
+Regeln für Kranken- und Pflegeversicherungsnachweise:
 - Diese Dokumente können Kontrollkästchen enthalten.
 - Berücksichtige ausschließlich tatsächlich angekreuzte oder markierte Optionen.
 - Der bloße sichtbare Text einer nicht angekreuzten Option ist keine Angabe.
@@ -888,11 +885,10 @@ Regeln für Kranken- und Pflegeversicherungsnachweise:
 - Bei einem Lebenslauf darfst du Fachsemester, Hochschulsemester,
   Regelstudienzeit und Matrikelnummer niemals aus Zeitangaben ableiten.
 - Gib diese Felder bei einem Lebenslauf nicht in profile_updates aus.
-- "Seit 10/2022 studiert" beschreibt einen Zeitraum, aber kein ausdrücklich
-  genanntes Fachsemester.
-Bei einem Lebenslauf extrahiere zusätzlich bis zu 16 chronologische Stationen.
-Jede Station enthält: von, bis, name_ort, art, abschluss_leistung.
-Weise in warnings auf erkennbare zeitliche Lücken oder unklare Angaben hin.
+- "Seit 10/2022 studiert" beschreibt einen Zeitraum, aber kein ausdrücklich genanntes Fachsemester.
+- Bei einem Lebenslauf extrahiere zusätzlich bis zu 16 chronologische Stationen.
+- Jede Station enthält: von, bis, name_ort, art, abschluss_leistung.
+- Weise in warnings auf erkennbare zeitliche Lücken oder unklare Angaben hin.
 
 Gib ausschließlich JSON zurück:
 {{
@@ -1076,8 +1072,8 @@ Gib ausschließlich JSON zurück:
             filename
         )
 
-        # Eine eindeutige lokale Klassifikation hat Vorrang
-        # vor einer unsicheren LLM-Klassifikation.
+        # Die lokale Dokumentenklassifikation hat Vorrang
+        # vor der Klassifikation des Sprachmodells.
         if local_document_type != "unbekannt":
             result["document_type"] = local_document_type
             result["confidence"] = "high"
@@ -1101,11 +1097,8 @@ Gib ausschließlich JSON zurück:
             )
 
             for field_name, payload in insurance_fallback.items():
-                # Die eindeutige lokale Erkennung hat Vorrang
-                # vor einer fehlenden oder falschen LLM-Auslegung.
                 result["case_updates"][field_name] = payload
 
-        # Ergänzende lokale Rückfallebene für Studienbescheinigungen.
         if (
                 result["document_type"]
                 == "studienbescheinigung"

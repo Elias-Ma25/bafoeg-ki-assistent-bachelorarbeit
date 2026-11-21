@@ -48,15 +48,6 @@ def build_vectorstore(
     print("Quelldokumente/Seiten:", len(documents), flush=True)
     print("Neue Chunks:", len(split_docs), flush=True)
 
-    # Prüfen, ob die gesuchte Rechtsinformation
-    # bereits im eingelesenen Material vorhanden ist.
-    found = any(
-        "teilzeitausbildungen sind nicht förderungsfähig"
-        in doc.page_content.lower()
-        for doc in documents
-    )
-    print("Teilzeit-Regel im Quelltext gefunden:", found, flush=True)
-
     embeddings = OpenAIEmbeddings()
 
     # Bestehende Sammlung öffnen
@@ -71,7 +62,7 @@ def build_vectorstore(
         flush=True,
     )
 
-    # WICHTIG: Alte Sammlung wirklich löschen.
+    # Vorhandene Chroma-Sammlung vor dem Neuaufbau entfernen.
     old_store.delete_collection()
     del old_store
 
@@ -107,13 +98,12 @@ def get_relevant_context(
 ) -> str:
     vectorstore = load_vectorstore(persist_directory)
 
-    # Testweise reine Ähnlichkeitssuche statt MMR
+    # Relevante Textabschnitte über die Ähnlichkeitssuche abrufen.
     docs = vectorstore.similarity_search(
         question,
         k=k,
     )
 
-    # Debug-Ausgabe der gefundenen Textabschnitte
     print("\n=== RAG-SUCHERGEBNISSE ===", flush=True)
     print("Frage:", question, flush=True)
 

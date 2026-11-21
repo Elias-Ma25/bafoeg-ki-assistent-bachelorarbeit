@@ -144,7 +144,7 @@ class Formblatt1Manager:
             career_row_count: int = 1,
             manual_values: dict[str, str] | None = None,
     ) -> OrderedDict[str, dict[str, Any]]:
-        """Erzeugt rund 40 unterstützte Formblattfelder plus Werdegangszeilen."""
+        """Erzeugt die unterstützten Formularfelder"""
         manual_values = manual_values or {}
         career_entries = career_entries or []
         career_row_count = max(
@@ -421,7 +421,7 @@ class Formblatt1Manager:
                                "Steueridentifikationsnummer", "steuer_id", required=True,
                                pdf_field="Steueridentifikationsnummer"))
 
-        # Eltern – bewusst nur Kernfelder als Stichprobe
+        # Eltern – ausgewählte Angaben zu den Eltern
         for field_id, label, profile_key, pdf_field in [
             ("elternteil1_nachname", "Nachname 1. Elternteil", "elternteil1_nachname", "Name 1. Elternteil"),
             ("elternteil1_vorname", "Vorname 1. Elternteil", "elternteil1_vorname", "Vorname Name 1. Elternteil"),
